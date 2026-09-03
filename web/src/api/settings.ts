@@ -1,21 +1,5 @@
 import http from "@/utils/http";
-
-export interface Setting {
-  key: string;
-  name: string;
-  value: string | number | boolean;
-  type: "int" | "string" | "bool";
-  min_value?: number;
-  description: string;
-  required: boolean;
-}
-
-export interface SettingCategory {
-  category_name: string;
-  settings: Setting[];
-}
-
-export type SettingsUpdatePayload = Record<string, string | number | boolean>;
+import type { SettingCategory, SettingsUpdatePayload } from "@/types/models";
 
 export const settingsApi = {
   async getSettings(): Promise<SettingCategory[]> {

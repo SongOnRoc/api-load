@@ -2,13 +2,11 @@
 import { keysApi } from "@/api/keys";
 import type { Group } from "@/types/models";
 import { getGroupDisplayName } from "@/utils/display";
-import { Add, AddCircleOutline, Copy, LinkOutline, Search } from "@vicons/ionicons5";
+import { Add, LinkOutline, Search, ReorderTwo } from "@vicons/ionicons5";
 import { NButton, NCard, NEmpty, NInput, NSpin, NTabPane, NTabs, NTag, NTooltip } from "naive-ui";
 import { computed, onBeforeUpdate, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import AggregateGroupModal from "./AggregateGroupModal.vue";
-import CopyAggregateGroupModal from "./CopyAggregateGroupModal.vue";
-import CreateSubGroupModal from "./CreateSubGroupModal.vue";
 import GroupFormModal from "./GroupFormModal.vue";
 import ParentAggregateDrawer from "./ParentAggregateDrawer.vue";
 
@@ -83,32 +81,12 @@ function handleParentDrawerSelect(parentGroupId: number) {
   }
 }
 
-// 复制聚合分组弹窗状态
-const copyAggregateModalShow = ref(false);
-const copyAggregateTarget = ref<Group | null>(null);
+// 复制聚合分组弹窗状态已移至 GroupInfoCard 统一管理
 
-function openCopyAggregateModal(group: Group) {
-  copyAggregateTarget.value = group;
-  copyAggregateModalShow.value = true;
-}
-
-function handleCopyAggregateCreated(newGroup: Group) {
-  copyAggregateModalShow.value = false;
-  copyAggregateTarget.value = null;
-  // 复制成功后刷新列表并选中新分组
-  if (newGroup.id) {
-    emit("refresh-and-select", newGroup.id);
-    handleGroupClick(newGroup);
-  } else {
-    emit("refresh");
-  }
-}
 const showGroupModal = ref(false);
 // 存储分组项 DOM 元素的引用
 const groupItemRefs = ref<Map<number, HTMLElement>>(new Map());
 const showAggregateGroupModal = ref(false);
-const createSubGroupModalShow = ref(false);
-const createSubGroupTarget = ref<Group | null>(null);
 const displayGroups = ref<Group[]>([]);
 const draggingGroupId = ref<number | null>(null);
 const dropTarget = ref<{ groupId: number; position: "before" | "after" } | null>(null);
@@ -235,30 +213,6 @@ function openCreateGroupModal() {
 
 function openCreateAggregateGroupModal() {
   showAggregateGroupModal.value = true;
-}
-
-function openCreateSubGroupModal(group: Group) {
-  createSubGroupTarget.value = group;
-  createSubGroupModalShow.value = true;
-}
-
-function handleSubGroupCreated(newGroup: Group) {
-  createSubGroupModalShow.value = false;
-  // 立即把新建的子分组插入到 displayGroups 头部，UI 即时显示，无需等待 watch 重新拉取
-  if (newGroup?.id) {
-    const exists = displayGroups.value.some(g => g.id === newGroup.id);
-    if (!exists) {
-      displayGroups.value = [newGroup, ...displayGroups.value];
-    }
-  }
-  const targetId = createSubGroupTarget.value?.id;
-  // 先 emit，再清空 target，避免 emit 之前 v-if 失效影响事件链
-  if (targetId) {
-    emit("refresh-and-select", targetId);
-  } else {
-    emit("refresh");
-  }
-  createSubGroupTarget.value = null;
 }
 
 function handleGroupCreated(group: Group) {
@@ -445,7 +399,19 @@ function handleDragEnd() {
 
 <template>
   <div class="group-list-container">
-    <n-card class="group-list-card modern-card" :bordered="false" size="small">
+    <n-card
+      class="group-list-card modern-card"
+      :bordered="false"
+      size="small"
+      :content-style="{
+        flex: 1,
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        padding: '8px',
+      }"
+    >
       <!-- 分组类型切换 -->
       <n-tabs
         v-model:value="activeTab"
@@ -453,8 +419,6 @@ function handleDragEnd() {
         size="small"
         class="group-tabs"
         :tabs-padding="8"
-        :pane-wrapper-style="{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }"
-        :pane-style="{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }"
       >
         <n-tab-pane name="aggregate" :tab="aggregateTabLabel">
           <div class="search-section">
@@ -507,7 +471,7 @@ function handleDragEnd() {
                   "
                 >
                   <div
-                    class="group-icon"
+                    class="group-icon drag-handle"
                     :class="{ 'drag-disabled': !canDrag }"
                     :draggable="canDrag"
                     :role="'button'"
@@ -516,7 +480,7 @@ function handleDragEnd() {
                     @dragstart="handleDragStart($event, group.id)"
                     @dragend="handleDragEnd"
                   >
-                    <span>🔗</span>
+                    <n-icon :component="ReorderTwo" :size="14" />
                   </div>
                   <div class="group-content">
                     <div class="group-name">{{ getGroupDisplayName(group) }}</div>
@@ -526,38 +490,6 @@ function handleDragEnd() {
                       </n-tag>
                     </div>
                   </div>
-                  <n-tooltip trigger="hover" placement="right">
-                    <template #trigger>
-                      <n-button
-                        quaternary
-                        circle
-                        size="tiny"
-                        class="action-btn"
-                        @click.stop="openCreateSubGroupModal(group)"
-                      >
-                        <template #icon>
-                          <n-icon :component="AddCircleOutline" />
-                        </template>
-                      </n-button>
-                    </template>
-                    {{ t("subGroups.createSubGroup") }}
-                  </n-tooltip>
-                  <n-tooltip trigger="hover" placement="right">
-                    <template #trigger>
-                      <n-button
-                        quaternary
-                        circle
-                        size="tiny"
-                        class="action-btn"
-                        @click.stop="openCopyAggregateModal(group)"
-                      >
-                        <template #icon>
-                          <n-icon :component="Copy" />
-                        </template>
-                      </n-button>
-                    </template>
-                    {{ t("common.copy") }}
-                  </n-tooltip>
                   <span v-if="dragDisabledHint" :id="`drag-hint-${group.id}`" class="sr-only">
                     {{ dragDisabledHint }}
                   </span>
@@ -616,7 +548,7 @@ function handleDragEnd() {
                   "
                 >
                   <div
-                    class="group-icon"
+                    class="group-icon drag-handle"
                     :class="{ 'drag-disabled': !canDrag }"
                     :draggable="canDrag"
                     :role="'button'"
@@ -625,11 +557,7 @@ function handleDragEnd() {
                     @dragstart="handleDragStart($event, group.id)"
                     @dragend="handleDragEnd"
                   >
-                    <span v-if="group.channel_type === 'openai'">🤖</span>
-                    <span v-else-if="group.channel_type === 'openai-response'">🔁</span>
-                    <span v-else-if="group.channel_type === 'gemini'">💎</span>
-                    <span v-else-if="group.channel_type === 'anthropic'">🧠</span>
-                    <span v-else>🔧</span>
+                    <n-icon :component="ReorderTwo" :size="14" />
                   </div>
                   <div class="group-content">
                     <div class="group-name">{{ getGroupDisplayName(group) }}</div>
@@ -704,22 +632,10 @@ function handleDragEnd() {
       :groups="groups"
       @success="handleGroupCreated"
     />
-    <create-sub-group-modal
-      v-if="createSubGroupTarget?.id"
-      v-model:show="createSubGroupModalShow"
-      :aggregate-group="createSubGroupTarget"
-      @success="handleSubGroupCreated"
-    />
     <parent-aggregate-drawer
       v-model:show="parentDrawerShow"
       :group-id="parentDrawerGroupId"
       @select="handleParentDrawerSelect"
-    />
-    <copy-aggregate-group-modal
-      v-if="copyAggregateTarget?.id"
-      v-model:show="copyAggregateModalShow"
-      :group="copyAggregateTarget"
-      @success="handleCopyAggregateCreated"
     />
   </div>
 </template>
@@ -761,8 +677,29 @@ function handleDragEnd() {
   flex-direction: column;
 }
 
+.group-tabs :deep(.n-tabs) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
 .group-tabs :deep(.n-tabs-nav) {
   flex-shrink: 0;
+}
+
+.group-tabs :deep(.n-tabs-pane-wrapper) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.group-tabs :deep(.n-tab-pane) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .groups-section {
@@ -770,6 +707,22 @@ function handleDragEnd() {
   min-height: 0;
   overflow: auto;
   padding: 0 2px;
+  display: flex;
+  flex-direction: column;
+}
+
+.groups-section :deep(.n-spin) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.groups-section :deep(.n-spin-content) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .empty-container {
@@ -809,99 +762,89 @@ function handleDragEnd() {
   position: absolute;
   left: 8px;
   right: 8px;
-  height: 3px;
-  border-radius: 3px;
+  height: 2px;
+  border-radius: 2px;
   background: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.15);
   pointer-events: none;
 }
 
 .group-item.drop-before::before {
-  top: -4px;
+  top: -3px;
 }
 
 .group-item.drop-after::after {
-  bottom: -4px;
+  bottom: -3px;
 }
 
-:root.dark .group-item.drop-before::before,
-:root.dark .group-item.drop-after::after {
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
-}
-
-/* 聚合分组样式 */
+/* 聚合分组样式 - 中性虚线区分 */
 .group-item.aggregate {
   border-style: dashed;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.02) 0%, rgba(102, 126, 234, 0.05) 100%);
-}
-
-:root.dark .group-item.aggregate {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(102, 126, 234, 0.1) 100%);
-  border-color: rgba(102, 126, 234, 0.2);
+  background: var(--bg-secondary);
 }
 
 .group-item:hover,
 .group-item.aggregate:hover {
-  background: var(--bg-tertiary);
+  background: var(--hover-bg);
   border-color: var(--primary-color);
 }
 
 .group-item.aggregate:hover {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(102, 126, 234, 0.1) 100%);
   border-style: dashed;
 }
 
-:root.dark .group-item:hover {
-  background: rgba(102, 126, 234, 0.1);
-  border-color: rgba(102, 126, 234, 0.3);
-}
-
-:root.dark .group-item.aggregate:hover {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(102, 126, 234, 0.15) 100%);
-  border-color: rgba(102, 126, 234, 0.4);
+/* 选中态 - 扁平克制：emerald 浅色背景 + emerald 左侧高亮条 */
+.group-item.active,
+.group-item.aggregate.active {
+  background: var(--primary-color-soft);
+  color: var(--text-primary);
+  border-color: var(--primary-color);
+  border-style: solid;
+  box-shadow: var(--shadow-xs);
 }
 
 .group-item.aggregate.active {
-  background: var(--primary-gradient);
   border-style: solid;
 }
 
-.group-item.active,
-:root.dark .group-item.active,
-:root.dark .group-item.aggregate.active {
-  background: var(--primary-gradient);
-  color: white;
-  border-color: transparent;
-  box-shadow: var(--shadow-md);
-  border-style: solid;
-}
-
-.group-icon {
+.group-icon.drag-handle {
   font-size: 16px;
-  width: 28px;
+  width: 24px;
   height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-secondary);
+  background: transparent;
   border-radius: 6px;
   flex-shrink: 0;
   box-sizing: border-box;
   cursor: grab;
   user-select: none;
+  color: var(--text-tertiary);
+  transition: var(--transition-base);
 }
 
-.group-item.active .group-icon {
-  background: rgba(255, 255, 255, 0.2);
+.group-item:hover .group-icon.drag-handle {
+  color: var(--primary-color);
+  background: var(--hover-bg);
 }
 
-.group-item.dragging .group-icon {
+.group-item.active .group-icon.drag-handle {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+.group-item.active .group-icon.drag-handle :deep(.n-icon) {
+  color: #fff;
+}
+
+.group-item.dragging .group-icon.drag-handle {
   cursor: grabbing;
+  color: var(--primary-color);
 }
 
-.group-icon.drag-disabled {
+.group-icon.drag-handle.drag-disabled {
   cursor: not-allowed;
-  opacity: 0.65;
+  opacity: 0.4;
 }
 
 .group-content {
@@ -934,7 +877,7 @@ function handleDragEnd() {
 
 .group-item.active .group-id {
   opacity: 0.9;
-  color: white;
+  color: var(--primary-color);
 }
 
 .add-sub-group-btn {
@@ -1049,7 +992,7 @@ function handleDragEnd() {
 
 /* 暗黑模式特殊样式 */
 :root.dark .group-item {
-  border-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.06);
 }
 
 :root.dark .group-icon {
@@ -1059,19 +1002,20 @@ function handleDragEnd() {
 
 :root.dark .search-section :deep(.n-input) {
   --n-border: 1px solid rgba(255, 255, 255, 0.08);
-  --n-border-hover: 1px solid rgba(102, 126, 234, 0.4);
+  --n-border-hover: 1px solid var(--primary-color);
   --n-border-focus: 1px solid var(--primary-color);
   background: rgba(255, 255, 255, 0.03);
 }
 
 /* 标签样式优化 */
 :root.dark .group-meta :deep(.n-tag) {
-  background: rgba(102, 126, 234, 0.15);
-  border: 1px solid rgba(102, 126, 234, 0.3);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
 }
 
 :root.dark .group-item.active .group-meta :deep(.n-tag) {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: var(--primary-color-soft);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
 }
 </style>

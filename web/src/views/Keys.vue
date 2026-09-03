@@ -8,6 +8,9 @@ import SubGroupTable from "@/components/keys/SubGroupTable.vue";
 import type { Group, SubGroupInfo } from "@/types/models";
 import { onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const groups = ref<Group[]>([]);
 const loading = ref(false);
@@ -122,9 +125,16 @@ function handleNavigateToGroup(groupId: number) {
 </script>
 
 <template>
-  <div>
+  <div class="keys-page fade-in-up">
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">{{ t("nav.keys") }}</h1>
+        <p class="page-subtitle">{{ t("keys.subtitle") }}</p>
+      </div>
+    </header>
+
     <!-- 加密配置错误警告 -->
-    <encryption-mismatch-alert style="margin-bottom: 16px" />
+    <encryption-mismatch-alert class="page-alert" />
 
     <div class="keys-container">
       <div class="sidebar">
@@ -178,10 +188,36 @@ function handleNavigateToGroup(groupId: number) {
 </template>
 
 <style scoped>
+.keys-page {
+  width: 100%;
+}
+
+.page-header {
+  margin-bottom: 20px;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+  letter-spacing: -0.5px;
+}
+
+.page-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.page-alert {
+  margin-bottom: 16px;
+}
+
 .keys-container {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 16px;
   width: 100%;
 }
 
@@ -194,7 +230,8 @@ function handleNavigateToGroup(groupId: number) {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 16px;
+  min-width: 0;
 }
 
 .group-info {
@@ -214,12 +251,12 @@ function handleNavigateToGroup(groupId: number) {
   }
 
   .sidebar {
-    width: 240px;
-    height: calc(100vh - 159px);
+    width: 260px;
+    height: calc(100vh - 200px);
   }
 
   .main-content {
-    height: calc(100vh - 159px);
+    height: calc(100vh - 200px);
     flex-shrink: 1;
     min-width: 0;
   }

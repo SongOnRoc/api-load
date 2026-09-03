@@ -1,20 +1,17 @@
 import http from "@/utils/http";
-import { useState } from "@/utils/state";
+import { useAuthStore } from "@/stores/auth";
 
-const AUTH_KEY = "authKey";
-
-export const useAuthKey = () => {
-  return useState<string | null>(AUTH_KEY, () => null);
-};
-
+/**
+ * 认证服务 - 兼容旧接口，内部委托给 auth store
+ * 取代旧的 useAuthKey + useState 实现
+ */
 export function useAuthService() {
-  const authKey = useAuthKey();
+  const authStore = useAuthStore();
 
   const login = async (key: string): Promise<boolean> => {
     try {
       await http.post("/auth/login", { auth_key: key });
-      localStorage.setItem(AUTH_KEY, key);
-      authKey.value = key;
+      authStore.setKey(key);
       return true;
     } catch (_error) {
       // 错误已记录
@@ -23,20 +20,11 @@ export function useAuthService() {
   };
 
   const logout = (): void => {
-    localStorage.removeItem(AUTH_KEY);
-    authKey.value = null;
+    authStore.clear();
   };
 
   const checkLogin = (): boolean => {
-    if (authKey.value) {
-      return true;
-    }
-
-    const key = localStorage.getItem(AUTH_KEY);
-    if (key) {
-      authKey.value = key;
-    }
-    return !!authKey.value;
+    return authStore.checkLogin();
   };
 
   return {

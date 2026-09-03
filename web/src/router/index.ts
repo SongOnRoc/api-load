@@ -1,4 +1,4 @@
-import { useAuthService } from "@/services/auth";
+import { useAuthStore } from "@/stores/auth";
 import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router";
 import Layout from "@/components/Layout.vue";
 
@@ -41,10 +41,9 @@ const router = createRouter({
   routes,
 });
 
-const { checkLogin } = useAuthService();
-
 router.beforeEach((to, _from, next) => {
-  const loggedIn = checkLogin();
+  const auth = useAuthStore();
+  const loggedIn = auth.checkLogin();
   if (to.path !== "/login" && !loggedIn) {
     return next({ path: "/login" });
   }

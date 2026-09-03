@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { keysApi } from "@/api/keys";
-import { appState } from "@/utils/app-state";
+import { useTaskStore } from "@/stores/task";
 import { Close, CloudUploadOutline } from "@vicons/ionicons5";
 import { NButton, NCard, NInput, NModal, NUpload, type UploadFileInfo } from "naive-ui";
 import { ref, watch } from "vue";
@@ -104,7 +104,7 @@ async function handleSubmit() {
     resetForm();
     handleClose();
     window.$message.success(t("keys.importTaskStarted"));
-    appState.taskPollingTrigger++;
+    useTaskStore().triggerTaskPolling();
   } finally {
     loading.value = false;
   }

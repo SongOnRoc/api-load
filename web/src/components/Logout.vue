@@ -27,20 +27,13 @@ const handleLogout = () => {
 <style scoped>
 .logout-button {
   color: var(--text-secondary);
-  background: var(--card-bg);
-  backdrop-filter: blur(8px);
-  border: 1px solid var(--border-color-light);
-  transition: all 0.2s ease;
+  transition: var(--transition-base);
   font-weight: 500;
-  letter-spacing: 0.2px;
 }
 
 .logout-button:hover {
-  color: #dc2626;
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.2);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  color: var(--error-color);
+  background: var(--error-bg);
 }
 
 :deep(.n-button__content) {

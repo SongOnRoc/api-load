@@ -35,24 +35,21 @@ const handleLogin = async () => {
     <div class="language-selector-wrapper">
       <language-selector />
     </div>
-    <div class="login-background">
-      <div class="login-decoration" />
-      <div class="login-decoration-2" />
-    </div>
 
     <div class="login-content">
       <div class="login-header">
+        <div class="login-logo">
+          <img src="@/assets/logo.png" alt="GPT Load" />
+        </div>
         <h1 class="login-title">{{ t("login.title") }}</h1>
         <p class="login-subtitle">{{ t("login.subtitle") }}</p>
       </div>
 
-      <n-card class="login-card modern-card" :bordered="false">
-        <template #header>
-          <div class="card-header">
-            <h2 class="card-title">{{ t("login.welcome") }}</h2>
-            <p class="card-subtitle">{{ t("login.welcomeDesc") }}</p>
-          </div>
-        </template>
+      <n-card class="login-card" :bordered="false">
+        <div class="card-header">
+          <h2 class="card-title">{{ t("login.welcome") }}</h2>
+          <p class="card-subtitle">{{ t("login.welcomeDesc") }}</p>
+        </div>
 
         <n-space vertical size="large">
           <n-input
@@ -69,7 +66,7 @@ const handleLogin = async () => {
           </n-input>
 
           <n-button
-            class="login-btn modern-button"
+            class="login-btn"
             type="primary"
             size="large"
             block
@@ -91,8 +88,8 @@ const handleLogin = async () => {
 <style scoped>
 .language-selector-wrapper {
   position: absolute;
-  top: 24px;
-  right: 24px;
+  top: 20px;
+  right: 20px;
   z-index: 10;
 }
 
@@ -106,155 +103,90 @@ const handleLogin = async () => {
   padding: 24px;
 }
 
-.login-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-}
-
-.login-decoration {
-  position: absolute;
-  top: -50%;
-  right: -20%;
-  width: 800px;
-  height: 800px;
-  background: var(--primary-gradient);
-  border-radius: 50%;
-  opacity: 0.1;
-  animation: float 6s ease-in-out infinite;
-}
-
-.login-decoration-2 {
-  position: absolute;
-  bottom: -50%;
-  left: -20%;
-  width: 600px;
-  height: 600px;
-  background: var(--secondary-gradient);
-  border-radius: 50%;
-  opacity: 0.08;
-  animation: float 8s ease-in-out infinite reverse;
-}
-
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-20px) rotate(5deg);
-  }
-}
-
 .login-content {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 420px;
-  padding: 0 20px;
+  max-width: 400px;
+  animation: fadeInUp 0.4s var(--ease-out) both;
 }
 
 .login-header {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 28px;
+}
+
+.login-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+}
+
+.login-logo img {
+  width: 100%;
+  height: 100%;
 }
 
 .login-title {
-  font-size: 2.5rem;
+  font-size: 1.75rem;
   font-weight: 700;
-  background: var(--primary-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 8px;
+  color: var(--text-primary);
+  margin-bottom: 6px;
   letter-spacing: -0.5px;
 }
 
 .login-subtitle {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   color: var(--text-secondary);
   margin: 0;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .login-card {
-  backdrop-filter: blur(20px);
-  border: 1px solid var(--border-color-light);
+  border-radius: var(--border-radius-lg);
 }
 
 .card-header {
   text-align: center;
-  padding-bottom: 8px;
+  margin-bottom: 20px;
 }
 
 .card-title {
-  font-size: 1.5rem;
+  font-size: 1.15rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin: 0 0 8px 0;
+  margin: 0 0 4px 0;
 }
 
 .card-subtitle {
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   color: var(--text-secondary);
   margin: 0;
 }
 
 .login-btn {
-  background: var(--primary-gradient);
-  border: none;
+  height: 44px;
+  font-size: 0.95rem;
   font-weight: 600;
-  letter-spacing: 0.5px;
-  height: 48px;
-  font-size: 1rem;
-}
-
-.login-btn:hover {
-  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
 }
 
 :deep(.n-input) {
-  --n-border-radius: 12px;
-  --n-height: 48px;
+  --n-border-radius: 8px;
+  --n-height: 44px;
 }
 
 :deep(.n-input__input-el) {
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
 :deep(.n-input__prefix) {
-  color: var(--text-secondary);
-}
-
-:deep(.n-card-header) {
-  padding-bottom: 16px;
+  color: var(--text-tertiary);
 }
 
 :deep(.n-card__content) {
   padding-top: 0;
-}
-
-/* 暗黑模式适配 */
-:root.dark .login-decoration {
-  opacity: 0.05;
-}
-
-:root.dark .login-decoration-2 {
-  opacity: 0.03;
-}
-
-:root.dark .login-card {
-  background: var(--card-bg-solid);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-:root.dark .login-btn:hover {
-  background: linear-gradient(135deg, #7c8aac 0%, #8b94c0 100%);
-  box-shadow: 0 8px 25px rgba(139, 157, 245, 0.2);
 }
 </style>

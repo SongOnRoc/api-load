@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { settingsApi, type Setting, type SettingCategory } from "@/api/settings";
+import { settingsApi } from "@/api/settings";
+import type { Setting, SettingCategory } from "@/types/models";
 import ProxyKeysInput from "@/components/common/ProxyKeysInput.vue";
 import { HelpCircle, Save } from "@vicons/ionicons5";
 import {
@@ -100,9 +101,16 @@ function generateValidationRules(item: Setting): FormItemRule[] {
 </script>
 
 <template>
-  <n-space vertical>
+  <div class="settings-page fade-in-up">
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">{{ t("nav.settings") }}</h1>
+        <p class="page-subtitle">{{ t("settings.subtitle") }}</p>
+      </div>
+    </header>
+
     <n-form ref="formRef" :model="form" label-placement="top">
-      <n-space vertical>
+      <n-space vertical :size="16">
         <n-card
           size="small"
           v-for="category in settingList"
@@ -170,17 +178,14 @@ function generateValidationRules(item: Setting): FormItemRule[] {
       </n-space>
     </n-form>
 
-    <div
-      v-if="settingList.length > 0"
-      style="display: flex; justify-content: center; padding-top: 12px"
-    >
+    <div v-if="settingList.length > 0" class="settings-actions">
       <n-button
         type="primary"
         size="large"
         :loading="isSaving"
         :disabled="isSaving"
         @click="handleSubmit"
-        style="min-width: 200px"
+        class="save-btn"
       >
         <template #icon>
           <n-icon :component="Save" />
@@ -188,5 +193,35 @@ function generateValidationRules(item: Setting): FormItemRule[] {
         {{ isSaving ? t("settings.saving") : t("settings.saveSettings") }}
       </n-button>
     </div>
-  </n-space>
+  </div>
 </template>
+
+<style scoped>
+.settings-actions {
+  display: flex;
+  justify-content: center;
+  padding-top: 16px;
+}
+
+.save-btn {
+  min-width: 200px;
+}
+
+.page-header {
+  margin-bottom: 20px;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+  letter-spacing: -0.5px;
+}
+
+.page-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+</style>

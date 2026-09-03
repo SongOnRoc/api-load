@@ -2,6 +2,7 @@
 import { keysApi } from "@/api/keys";
 import { settingsApi } from "@/api/settings";
 import ProxyKeysInput from "@/components/common/ProxyKeysInput.vue";
+import { useChannelTypeDefaults } from "@/composables/useChannelTypeDefaults";
 import type { Group, GroupConfigOption, UpstreamInfo } from "@/types/models";
 import { Add, Close, HelpCircleOutline, Remove } from "@vicons/ionicons5";
 import {
@@ -118,48 +119,13 @@ const userModifiedFields = ref({
 });
 
 // 根据渠道类型动态生成占位符提示
-const testModelPlaceholder = computed(() => {
-  switch (formData.channel_type) {
-    case "openai":
-    case "openai-response":
-      return "gpt-4.1-nano";
-    case "gemini":
-      return "gemini-2.0-flash-lite";
-    case "anthropic":
-      return "claude-3-haiku-20240307";
-    default:
-      return t("keys.enterModelName");
-  }
-});
-
-const upstreamPlaceholder = computed(() => {
-  switch (formData.channel_type) {
-    case "openai":
-    case "openai-response":
-      return "https://api.openai.com";
-    case "gemini":
-      return "https://generativelanguage.googleapis.com";
-    case "anthropic":
-      return "https://api.anthropic.com";
-    default:
-      return t("keys.enterUpstreamUrl");
-  }
-});
-
-const validationEndpointPlaceholder = computed(() => {
-  switch (formData.channel_type) {
-    case "openai":
-      return "/v1/chat/completions";
-    case "openai-response":
-      return "/v1/responses";
-    case "anthropic":
-      return "/v1/messages";
-    case "gemini":
-      return ""; // Gemini 不显示此字段
-    default:
-      return t("keys.enterValidationPath");
-  }
-});
+const {
+  testModelPlaceholder,
+  upstreamPlaceholder,
+  validationEndpointPlaceholder,
+  getChannelDefaultTestModel,
+  getChannelDefaultUpstream,
+} = useChannelTypeDefaults(computed(() => formData.channel_type));
 
 // 表单验证规则
 const rules: FormRules = {
@@ -227,7 +193,7 @@ watch(
       // 检查测试模型是否应该更新（为空或是旧渠道类型的默认值）
       if (
         !userModifiedFields.value.test_model ||
-        formData.test_model === getOldDefaultTestModel(oldChannelType)
+        formData.test_model === getChannelDefaultTestModel(oldChannelType)
       ) {
         formData.test_model = testModelPlaceholder.value;
         userModifiedFields.value.test_model = false;
@@ -237,7 +203,7 @@ watch(
       if (
         formData.upstreams.length > 0 &&
         (!userModifiedFields.value.upstream ||
-          formData.upstreams[0].url === getOldDefaultUpstream(oldChannelType))
+          formData.upstreams[0].url === getChannelDefaultUpstream(oldChannelType))
       ) {
         formData.upstreams[0].url = upstreamPlaceholder.value;
         userModifiedFields.value.upstream = false;
@@ -245,35 +211,6 @@ watch(
     }
   }
 );
-
-// 获取旧渠道类型的默认值（用于比较）
-function getOldDefaultTestModel(channelType: string): string {
-  switch (channelType) {
-    case "openai":
-    case "openai-response":
-      return "gpt-4.1-nano";
-    case "gemini":
-      return "gemini-2.0-flash-lite";
-    case "anthropic":
-      return "claude-3-haiku-20240307";
-    default:
-      return "";
-  }
-}
-
-function getOldDefaultUpstream(channelType: string): string {
-  switch (channelType) {
-    case "openai":
-    case "openai-response":
-      return "https://api.openai.com";
-    case "gemini":
-      return "https://generativelanguage.googleapis.com";
-    case "anthropic":
-      return "https://api.anthropic.com";
-    default:
-      return "";
-  }
-}
 
 // 重置表单
 function resetForm() {

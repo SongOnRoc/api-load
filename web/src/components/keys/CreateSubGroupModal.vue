@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { keysApi } from "@/api/keys";
 import ProxyKeysInput from "@/components/common/ProxyKeysInput.vue";
+import { useChannelTypeDefaults } from "@/composables/useChannelTypeDefaults";
 import type { Group, GroupConfigOption, UpstreamInfo } from "@/types/models";
 import { Add, Close, HelpCircleOutline, Remove } from "@vicons/ionicons5";
 import {
@@ -99,48 +100,8 @@ const configOptionsFetched = ref(false);
 // Channel type is inherited from the aggregate group
 const channelType = computed(() => props.aggregateGroup?.channel_type || "openai");
 
-const testModelPlaceholder = computed(() => {
-  switch (channelType.value) {
-    case "openai":
-    case "openai-response":
-      return "gpt-4.1-nano";
-    case "gemini":
-      return "gemini-2.0-flash-lite";
-    case "anthropic":
-      return "claude-3-haiku-20240307";
-    default:
-      return t("keys.enterModelName");
-  }
-});
-
-const upstreamPlaceholder = computed(() => {
-  switch (channelType.value) {
-    case "openai":
-    case "openai-response":
-      return "https://api.openai.com";
-    case "gemini":
-      return "https://generativelanguage.googleapis.com";
-    case "anthropic":
-      return "https://api.anthropic.com";
-    default:
-      return t("keys.enterUpstreamUrl");
-  }
-});
-
-const validationEndpointPlaceholder = computed(() => {
-  switch (channelType.value) {
-    case "openai":
-      return "/v1/chat/completions";
-    case "openai-response":
-      return "/v1/responses";
-    case "anthropic":
-      return "/v1/messages";
-    case "gemini":
-      return "";
-    default:
-      return t("keys.enterValidationPath");
-  }
-});
+const { testModelPlaceholder, upstreamPlaceholder, validationEndpointPlaceholder } =
+  useChannelTypeDefaults(channelType);
 
 const showValidationEndpoint = computed(() => channelType.value !== "gemini");
 

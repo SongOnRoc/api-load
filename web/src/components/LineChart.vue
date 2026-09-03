@@ -565,31 +565,24 @@ onMounted(() => {
 
 <style scoped>
 .chart-container {
-  padding: 20px;
-  border-radius: 16px;
-  backdrop-filter: blur(4px);
-  border: 1px solid var(--border-color-light);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 20px 24px;
+  transition: var(--transition-base);
 }
 
-/* 浅色主题 - 保持原有的紫色渐变设计 */
-:root:not(.dark) .chart-container {
-  background: var(--primary-gradient);
-  color: white;
-}
-
-/* 暗黑主题 - 使用深蓝紫渐变外层背景 */
-:root.dark .chart-container {
-  background: linear-gradient(135deg, #525a7a 0%, #424964 100%);
+.chart-container:hover {
   box-shadow: var(--shadow-md);
-  border: 1px solid rgba(139, 157, 245, 0.2);
-  color: #e8e8e8;
+  border-color: var(--border-color-strong);
 }
 
 .chart-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
+  align-items: center;
+  margin-bottom: 20px;
   gap: 16px;
 }
 
@@ -598,51 +591,19 @@ onMounted(() => {
 }
 
 .chart-title {
-  /* margin: 0 0 4px 0; */
-  font-size: 24px;
-  line-height: 28px;
+  font-size: 1rem;
+  line-height: 1.4;
   font-weight: 600;
-}
-
-/* 浅色主题 - 白色渐变文字 */
-:root:not(.dark) .chart-title {
-  background: linear-gradient(45deg, #fff, #f0f0f0);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* 暗黑主题 - 白色文字 */
-:root.dark .chart-title {
-  color: white;
-  background: none;
-  -webkit-background-clip: unset;
-  -webkit-text-fill-color: unset;
-  background-clip: unset;
+  color: var(--text-primary);
+  margin: 0;
 }
 
 .chart-subtitle {
-  margin: 0;
-  font-size: 14px;
+  margin: 4px 0 0 0;
+  font-size: 0.8125rem;
   font-weight: 400;
-}
-
-/* 浅色主题 */
-:root:not(.dark) .chart-subtitle {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-/* 暗黑主题 */
-:root.dark .chart-subtitle {
   color: var(--text-secondary);
 }
-
-/* .chart-content {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 12px;
-  padding: 12px;
-  color: #333;
-} */
 
 .chart-legend {
   position: absolute;
@@ -652,86 +613,38 @@ onMounted(() => {
   z-index: 10;
   display: flex;
   justify-content: center;
-  gap: 12px;
-  padding: 2px;
-  backdrop-filter: blur(8px);
-  border-radius: 24px;
-}
-
-/* 浅色主题 */
-:root:not(.dark) .chart-legend {
-  background: rgba(255, 255, 255, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-}
-
-/* 暗黑主题 */
-:root.dark .chart-legend {
-  background: var(--overlay-bg);
+  gap: 8px;
+  padding: 4px;
+  background: var(--bg-secondary);
   border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  font-size: 13px;
-  padding: 8px 16px;
-  border-radius: 20px;
-  transition: all 0.2s ease;
+  gap: 6px;
+  font-weight: 500;
+  font-size: 0.8125rem;
+  padding: 4px 10px;
+  border-radius: var(--border-radius-sm);
+  transition: var(--transition-base);
+  color: var(--text-secondary);
 }
 
-/* 浅色主题 */
-:root:not(.dark) .legend-item {
-  color: #334155;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-}
-
-/* 暗黑主题 */
-:root.dark .legend-item {
+.legend-item:hover {
+  background: var(--hover-bg);
   color: var(--text-primary);
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
-}
-
-/* 浅色主题悬停效果 */
-:root:not(.dark) .legend-item:hover {
-  background: rgba(255, 255, 255, 0.9);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* 暗黑主题悬停效果 */
-:root.dark .legend-item:hover {
-  background: var(--primary-color);
-  color: white;
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-lg);
 }
 
 .legend-indicator {
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  position: relative;
-}
-
-.legend-indicator::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 6px;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
 }
 
 .legend-label {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: inherit;
 }
 
@@ -744,26 +657,13 @@ onMounted(() => {
 .chart-svg {
   width: 100%;
   height: auto;
-  border-radius: 8px;
-}
-
-/* 浅色主题 - 白色背景 */
-:root:not(.dark) .chart-svg {
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e0e0e0;
-}
-
-/* 暗黑主题 - 深色背景 */
-:root.dark .chart-svg {
-  background: var(--card-bg-solid);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
-  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background: transparent;
 }
 
 .axis-label {
   fill: var(--chart-text);
-  font-size: 12px;
+  font-size: 11px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -784,52 +684,43 @@ onMounted(() => {
 .data-point:hover,
 .point-hover {
   r: 5;
-  filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.3));
-}
-
-.data-point-zero {
-  cursor: default;
-  transition: opacity 0.2s ease;
-}
-
-.data-point-zero:hover {
-  opacity: 0.8;
+  filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.2));
 }
 
 .chart-tooltip {
   position: absolute;
-  background: rgba(0, 0, 0, 0.9);
-  color: white;
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-size: 13px;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  padding: 10px 14px;
+  border-radius: var(--border-radius-md);
+  font-size: 0.8125rem;
   pointer-events: none;
   transform: translateX(-50%) translateY(-100%);
   z-index: 1000;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
   min-width: 140px;
   max-width: 220px;
 }
 
 .tooltip-time {
-  font-weight: 700;
-  margin-bottom: 8px;
+  font-weight: 600;
+  margin-bottom: 6px;
   text-align: center;
-  color: #e2e8f0;
-  font-size: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  padding-bottom: 6px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 4px;
 }
 
 .tooltip-value {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-weight: 600;
+  font-weight: 500;
   margin-bottom: 4px;
-  font-size: 12px;
+  font-size: 0.8125rem;
+  color: var(--text-primary);
 }
 
 .tooltip-value:last-child {
@@ -848,13 +739,12 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   height: 260px;
-  color: white;
+  color: var(--text-secondary);
 }
 
 .chart-loading p {
   margin-top: 16px;
-  font-size: 16px;
-  opacity: 0.8;
+  font-size: 0.875rem;
 }
 
 /* 响应式设计 */
@@ -864,7 +754,7 @@ onMounted(() => {
   }
 
   .chart-title {
-    font-size: 20px;
+    font-size: 0.95rem;
   }
 
   .chart-header {
@@ -885,9 +775,6 @@ onMounted(() => {
     top: auto;
     margin-top: 8px;
     margin-bottom: 12px;
-    background: transparent;
-    backdrop-filter: none;
-    border: none;
     width: 100%;
     flex-wrap: wrap;
     gap: 8px;
@@ -896,10 +783,7 @@ onMounted(() => {
 
   .legend-item {
     padding: 4px 10px;
-    font-size: 12px;
-    color: #333;
-    background: white;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    font-size: 0.75rem;
     gap: 6px;
   }
 
@@ -907,33 +791,5 @@ onMounted(() => {
     width: 100%;
     height: auto;
   }
-}
-
-/* 动画效果 */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.chart-container {
-  animation: fadeInUp 0.6s ease-out;
-}
-
-.legend-item {
-  animation: fadeInUp 0.6s ease-out;
-}
-
-.legend-item:nth-child(2) {
-  animation-delay: 0.1s;
-}
-
-.legend-item:nth-child(3) {
-  animation-delay: 0.2s;
 }
 </style>

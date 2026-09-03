@@ -250,3 +250,39 @@ export interface ChartData {
   labels: string[];
   datasets: ChartDataset[];
 }
+
+// 设置项
+export interface Setting {
+  key: string;
+  name: string;
+  value: string | number | boolean;
+  type: "int" | "string" | "bool";
+  min_value?: number;
+  description: string;
+  required: boolean;
+}
+
+export interface SettingCategory {
+  category_name: string;
+  settings: Setting[];
+}
+
+export type SettingsUpdatePayload = Record<string, string | number | boolean>;
+
+// 版本检查
+export interface GitHubRelease {
+  tag_name: string;
+  html_url: string;
+  published_at: string;
+  name: string;
+}
+
+export interface VersionInfo {
+  currentVersion: string;
+  latestVersion: string | null;
+  isLatest: boolean;
+  hasUpdate: boolean;
+  releaseUrl: string | null;
+  lastCheckTime: number;
+  status: "checking" | "latest" | "update-available" | "error";
+}

@@ -1,140 +1,165 @@
-/* 全局 CSS 变量定义 */
+/* 全局 CSS 变量定义 - Emerald 现代主题 */
 
-/* 浅色主题变量 */
+/* ============ 浅色主题（默认） ============ */
 :root,
 :root.light {
-  /* 背景色 */
+  /* 背景色 - 中性灰阶 */
   --bg-primary: #ffffff;
-  --bg-secondary: #f5f7fa;
-  --bg-tertiary: #e5e7eb;
-  --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  --bg-secondary: #fafbfc;
+  --bg-tertiary: #f3f4f6;
+  --bg-elevated: #ffffff;
+  --bg-gradient: linear-gradient(180deg, #fafbfc 0%, #f3f4f6 100%);
 
-  /* 文字颜色 */
-  --text-primary: #1e293b;
-  --text-secondary: #475569;
-  --text-tertiary: #94a3b8;
+  /* 文字颜色 - 清晰层级 */
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-tertiary: #9ca3af;
   --text-inverse: #ffffff;
 
   /* 边框颜色 */
-  --border-color: #e2e8f0;
-  --border-color-light: rgba(0, 0, 0, 0.08);
+  --border-color: #e5e7eb;
+  --border-color-light: #f3f4f6;
+  --border-color-strong: #d1d5db;
 
   /* 卡片背景 */
-  --card-bg: rgba(255, 255, 255, 0.95);
+  --card-bg: #ffffff;
   --card-bg-solid: #ffffff;
+  --card-bg-muted: #fafbfc;
 
   /* 组件颜色 */
-  --header-bg: rgba(255, 255, 255, 0.95);
-  --footer-bg: rgba(255, 255, 255, 0.95);
+  --header-bg: rgba(255, 255, 255, 0.85);
+  --footer-bg: rgba(255, 255, 255, 0.85);
 
-  /* 状态颜色 */
-  --success-bg: rgba(24, 160, 88, 0.1);
-  --success-border: rgba(24, 160, 88, 0.3);
-  --error-bg: rgba(255, 193, 7, 0.1);
-  --error-border: rgba(255, 193, 7, 0.5);
-  --invalid-bg: rgb(250, 250, 252);
-  --invalid-border: #ddd;
+  /* 状态颜色 - 柔和 */
+  --success-bg: rgba(16, 185, 129, 0.08);
+  --success-border: rgba(16, 185, 129, 0.2);
+  --success-color: #059669;
+  --error-bg: rgba(239, 68, 68, 0.08);
+  --error-border: rgba(239, 68, 68, 0.2);
+  --error-color: #dc2626;
+  --warning-bg: rgba(245, 158, 11, 0.08);
+  --warning-border: rgba(245, 158, 11, 0.2);
+  --warning-color: #d97706;
+  --info-bg: rgba(59, 130, 246, 0.08);
+  --info-border: rgba(59, 130, 246, 0.2);
+  --invalid-bg: #fafafa;
+  --invalid-border: #e5e7eb;
 
   /* 图表颜色 */
-  --chart-bg: white;
-  --chart-grid: #f0f0f0;
-  --chart-axis: #e0e0e0;
-  --chart-text: #666;
-  --chart-legend-bg: rgba(255, 255, 255, 0.6);
-  --chart-legend-text: #334155;
-  --chart-legend-secondary: #475569;
+  --chart-bg: #ffffff;
+  --chart-grid: #f3f4f6;
+  --chart-axis: #e5e7eb;
+  --chart-text: #6b7280;
+  --chart-legend-bg: rgba(255, 255, 255, 0.9);
+  --chart-legend-text: #374151;
+  --chart-legend-secondary: #6b7280;
 
-  /* 阴影 */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  /* 阴影 - 克制软阴影 */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 20px -5px rgba(0, 0, 0, 0.08), 0 8px 8px -5px rgba(0, 0, 0, 0.03);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
 
   /* 其他 */
   --overlay-bg: rgba(255, 255, 255, 0.8);
-  --code-bg: #f8f9fa;
-  --scrollbar-bg: rgba(0, 0, 0, 0.05);
-  --hover-bg: rgba(102, 126, 234, 0.08);
-  --modal-color: rgba(255, 255, 255, 0.95);
-  --success-color: #18a058;
-  --error-color: #d03050;
+  --code-bg: #f3f4f6;
+  --scrollbar-bg: rgba(0, 0, 0, 0.06);
+  --hover-bg: rgba(16, 185, 129, 0.06);
+  --hover-bg-strong: rgba(16, 185, 129, 0.1);
+  --modal-color: rgba(255, 255, 255, 0.98);
+  --focus-ring: rgba(16, 185, 129, 0.35);
 }
 
-/* 深色主题变量 */
+/* ============ 深色主题 ============ */
 :root.dark {
-  /* 背景色 - 外层浅色，内容深色 */
-  --bg-primary: #2b3038;
-  --bg-secondary: #323841;
-  --bg-tertiary: #3a414d;
-  --bg-gradient: linear-gradient(135deg, #323841 0%, #2b3038 100%);
+  /* 背景色 - 深色但保持可读 */
+  --bg-primary: #0f1115;
+  --bg-secondary: #15181d;
+  --bg-tertiary: #1c1f26;
+  --bg-elevated: #1a1d23;
+  --bg-gradient: linear-gradient(180deg, #0f1115 0%, #15181d 100%);
 
-  /* 文字颜色 - 浅色高对比 */
-  --text-primary: #e8e8e8;
-  --text-secondary: #b4b4b4;
-  --text-tertiary: #888888;
-  --text-inverse: #1a1d23;
+  /* 文字颜色 */
+  --text-primary: #f3f4f6;
+  --text-secondary: #b4b8bf;
+  --text-tertiary: #6b7280;
+  --text-inverse: #0f1115;
 
   /* 边框颜色 */
-  --border-color: #1a1d23;
-  --border-color-light: rgba(255, 255, 255, 0.06);
+  --border-color: #2a2e36;
+  --border-color-light: #1f232a;
+  --border-color-strong: #3a3f48;
 
-  /* 卡片背景 - 深黑色内容 */
-  --card-bg: rgba(15, 17, 21, 0.95);
-  --card-bg-solid: #0f1115;
+  /* 卡片背景 */
+  --card-bg: #1a1d23;
+  --card-bg-solid: #1a1d23;
+  --card-bg-muted: #15181d;
 
-  /* 组件颜色 - 深黑色 */
-  --header-bg: rgba(15, 17, 21, 0.95);
-  --footer-bg: rgba(15, 17, 21, 0.95);
+  /* 组件颜色 */
+  --header-bg: rgba(15, 17, 21, 0.85);
+  --footer-bg: rgba(15, 17, 21, 0.85);
 
   /* 状态颜色 */
-  --success-bg: rgba(24, 160, 88, 0.12);
-  --success-border: rgba(24, 160, 88, 0.35);
-  --error-bg: rgba(255, 193, 7, 0.12);
-  --error-border: rgba(255, 193, 7, 0.35);
+  --success-bg: rgba(16, 185, 129, 0.12);
+  --success-border: rgba(16, 185, 129, 0.28);
+  --success-color: #34d399;
+  --error-bg: rgba(239, 68, 68, 0.12);
+  --error-border: rgba(239, 68, 68, 0.28);
+  --error-color: #f87171;
+  --warning-bg: rgba(245, 158, 11, 0.12);
+  --warning-border: rgba(245, 158, 11, 0.28);
+  --warning-color: #fbbf24;
+  --info-bg: rgba(59, 130, 246, 0.12);
+  --info-border: rgba(59, 130, 246, 0.28);
   --invalid-bg: rgba(15, 17, 21, 0.6);
-  --invalid-border: #2a2f38;
+  --invalid-border: #2a2e36;
 
-  /* 图表颜色 - 深黑色背景 */
-  --chart-bg: rgba(12, 14, 18, 0.98);
-  --chart-grid: #2a2f38;
-  --chart-axis: #2a2f38;
-  --chart-text: #b4b4b4;
-  --chart-legend-bg: rgba(15, 17, 21, 0.95);
-  --chart-legend-text: #e8e8e8;
-  --chart-legend-secondary: #b4b4b4;
+  /* 图表颜色 */
+  --chart-bg: #15181d;
+  --chart-grid: #1f232a;
+  --chart-axis: #2a2e36;
+  --chart-text: #9ca3af;
+  --chart-legend-bg: rgba(26, 29, 35, 0.95);
+  --chart-legend-text: #e5e7eb;
+  --chart-legend-secondary: #9ca3af;
 
   /* 阴影 */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 20px -5px rgba(0, 0, 0, 0.5), 0 8px 8px -5px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
 
   /* 其他 */
   --overlay-bg: rgba(15, 17, 21, 0.8);
-  --code-bg: #0f1115;
-  --scrollbar-bg: rgba(255, 255, 255, 0.1);
-  --hover-bg: rgba(102, 126, 234, 0.15);
-  --modal-color: rgba(15, 17, 21, 0.98);
-  --success-color: #52c41a;
-  --error-color: #ff4d4f;
+  --code-bg: #15181d;
+  --scrollbar-bg: rgba(255, 255, 255, 0.08);
+  --hover-bg: rgba(16, 185, 129, 0.1);
+  --hover-bg-strong: rgba(16, 185, 129, 0.15);
+  --modal-color: rgba(26, 29, 35, 0.98);
+  --focus-ring: rgba(52, 211, 153, 0.4);
 }
 
-/* 通用颜色（不受主题影响） */
+/* ============ 通用颜色（不受主题影响） ============ */
 :root {
-  /* 主题色 */
-  --primary-color: #667eea;
-  --primary-color-hover: #5a6fd8;
-  --primary-color-pressed: #4c63d2;
-  --primary-color-suppl: rgba(102, 126, 234, 0.1);
-  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  /* 主题色 - Emerald */
+  --primary-color: #10b981;
+  --primary-color-hover: #059669;
+  --primary-color-pressed: #047857;
+  --primary-color-suppl: rgba(16, 185, 129, 0.1);
+  --primary-color-soft: rgba(16, 185, 129, 0.08);
+  --primary-color-softer: rgba(16, 185, 129, 0.04);
+  --primary-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
 
-  /* 边框半径 */
-  --border-radius-sm: 8px;
-  --border-radius-md: 12px;
-  --border-radius-lg: 16px;
-  --border-radius-xl: 24px;
+  /* 边框半径 - 收敛，更现代 */
+  --border-radius-xs: 4px;
+  --border-radius-sm: 6px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-radius-xl: 16px;
 
-  /* 阴影（添加到通用部分） */
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  /* 过渡曲线 - 统一 */
+  --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: all 0.2s var(--ease-out);
 }

@@ -108,6 +108,7 @@ export default {
   },
   keys: {
     title: "Key Management",
+    subtitle: "Manage API groups, keys and upstream channels",
     groupManagement: "Group Management",
     keyManagement: "Key Management",
     createGroup: "Create Group",
@@ -439,6 +440,9 @@ export default {
     addSubGroup: "Add Sub Group",
     createSubGroup: "Create Sub Group",
     subGroup: "Sub Group",
+    manuallyDisabledHint:
+      "Manually disabled via toggle. Turn on the switch at the bottom-right to enable.",
+    weightZeroHint: 'Weight is 0. Click "Edit" to adjust the weight.',
     totalSubGroups: "Total {total} sub groups",
     sortedByWeight: "Sorted by weight descending",
     noSubGroups: "No sub groups",
@@ -470,6 +474,7 @@ export default {
   },
   logs: {
     title: "Logs",
+    subtitle: "View request logs and system events",
     requestLogs: "Request Logs",
     systemLogs: "System Logs",
     errorLogs: "Error Logs",
@@ -531,6 +536,7 @@ export default {
   },
   settings: {
     title: "Settings",
+    subtitle: "Configure system, security and performance options",
     general: "General",
     security: "Security",
     performance: "Performance",

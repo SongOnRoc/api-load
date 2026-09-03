@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { keysApi } from "@/api/keys";
 import type { Group } from "@/types/models";
-import { appState } from "@/utils/app-state";
+import { useTaskStore } from "@/stores/task";
 import { getGroupDisplayName } from "@/utils/display";
 import { CloseOutline, CopyOutline } from "@vicons/ionicons5";
 import {
@@ -92,7 +92,7 @@ async function handleCopy() {
         })
       );
       // Trigger task polling to show import progress
-      appState.taskPollingTrigger++;
+      useTaskStore().triggerTaskPolling();
     } else {
       message.success(
         t("keys.copyGroupSuccess", { groupName: result.group.display_name || result.group.name })

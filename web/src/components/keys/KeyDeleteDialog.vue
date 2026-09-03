@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { keysApi } from "@/api/keys";
-import { appState } from "@/utils/app-state";
+import { useTaskStore } from "@/stores/task";
 import { Close } from "@vicons/ionicons5";
 import { NButton, NCard, NInput, NModal } from "naive-ui";
 import { ref, watch } from "vue";
@@ -60,7 +60,7 @@ async function handleSubmit() {
 
     handleClose();
     window.$message.success(t("keys.deleteTaskStarted"));
-    appState.taskPollingTrigger++;
+    useTaskStore().triggerTaskPolling();
   } finally {
     loading.value = false;
   }

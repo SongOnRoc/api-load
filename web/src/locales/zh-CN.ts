@@ -108,6 +108,7 @@ export default {
   },
   keys: {
     title: "密钥管理",
+    subtitle: "管理 API 分组、密钥与上游渠道",
     groupManagement: "分组管理",
     keyManagement: "密钥管理",
     createGroup: "创建分组",
@@ -423,6 +424,8 @@ export default {
     addSubGroup: "添加子分组",
     createSubGroup: "创建子分组",
     subGroup: "子分组",
+    manuallyDisabledHint: "已通过开关手动禁用，请打开右下角开关启用",
+    weightZeroHint: "权重为 0，请点击「编辑」调整权重",
     totalSubGroups: "共 {total} 个子分组",
     sortedByWeight: "按权重降序排序",
     noSubGroups: "暂无子分组",
@@ -454,6 +457,7 @@ export default {
   },
   logs: {
     title: "日志",
+    subtitle: "查看请求日志与系统事件",
     requestLogs: "请求日志",
     systemLogs: "系统日志",
     errorLogs: "错误日志",
@@ -515,6 +519,7 @@ export default {
   },
   settings: {
     title: "系统设置",
+    subtitle: "配置系统参数、安全与性能选项",
     general: "基础设置",
     security: "安全设置",
     performance: "性能设置",

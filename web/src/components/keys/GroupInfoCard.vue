@@ -7,7 +7,7 @@ import type {
   ParentAggregateGroup,
   SubGroupInfo,
 } from "@/types/models";
-import { appState } from "@/utils/app-state";
+import { useTaskStore } from "@/stores/task";
 import { copy } from "@/utils/clipboard";
 import { getGroupDisplayName, maskProxyKeys } from "@/utils/display";
 import { CopyOutline, EyeOffOutline, EyeOutline, Pencil, Trash } from "@vicons/ionicons5";
@@ -52,6 +52,7 @@ interface Emits {
 const props = defineProps<Props>();
 
 const emit = defineEmits<Emits>();
+const taskStore = useTaskStore();
 
 const stats = ref<GroupStatsResponse | null>(null);
 const loading = ref(false);
@@ -134,7 +135,7 @@ watch(
 
 // 监听任务完成事件，自动刷新当前分组数据
 watch(
-  () => [appState.groupDataRefreshTrigger, appState.syncOperationTrigger],
+  () => [taskStore.groupDataRefreshTrigger, taskStore.syncOperationTrigger],
   () => {
     if (!props.group) {
       return;
@@ -142,14 +143,14 @@ watch(
 
     // 检查是否需要刷新当前分组的数据
     const isCurrentGroupTask =
-      appState.lastCompletedTask && appState.lastCompletedTask.groupName === props.group.name;
+      taskStore.lastCompletedTask && taskStore.lastCompletedTask.groupName === props.group.name;
     const isCurrentGroupSync =
-      appState.lastSyncOperation && appState.lastSyncOperation.groupName === props.group.name;
+      taskStore.lastSyncOperation && taskStore.lastSyncOperation.groupName === props.group.name;
 
     const shouldRefresh =
       (isCurrentGroupTask &&
         ["KEY_VALIDATION", "KEY_IMPORT", "KEY_DELETE"].includes(
-          appState.lastCompletedTask?.taskType || ""
+          taskStore.lastCompletedTask?.taskType || ""
         )) ||
       isCurrentGroupSync;
 

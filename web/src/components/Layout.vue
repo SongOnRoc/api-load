@@ -42,8 +42,16 @@ const toggleMenu = () => {
           <theme-toggle />
           <logout v-if="!isMobile" />
           <n-button v-if="isMobile" text @click="toggleMenu">
-            <svg viewBox="0 0 24 24" width="24" height="24">
-              <path fill="currentColor" d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z" />
+            <svg
+              viewBox="0 0 24 24"
+              width="22"
+              height="22"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <path d="M3 6h18M3 12h18M3 18h18" />
             </svg>
           </n-button>
         </div>
@@ -90,24 +98,23 @@ const toggleMenu = () => {
 
 .layout-header {
   background: var(--header-bg);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border-color-light);
-  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-color);
   position: sticky;
   top: 0;
   z-index: 100;
-  padding: 0 12px;
+  padding: 0 16px;
 }
 
 .header-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 0;
-  overflow-x: auto;
-  max-width: 1200px;
+  padding: 10px 0;
+  max-width: 1280px;
   margin: 0 auto;
   position: relative;
+  gap: 16px;
 }
 
 .header-nav {
@@ -120,7 +127,7 @@ const toggleMenu = () => {
 .header-brand {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-shrink: 0;
   z-index: 2;
 }
@@ -129,8 +136,8 @@ const toggleMenu = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 35px;
-  height: 35px;
+  width: 30px;
+  height: 30px;
   img {
     height: 100%;
     width: 100%;
@@ -138,12 +145,9 @@ const toggleMenu = () => {
 }
 
 .brand-title {
-  font-size: 1.4rem;
+  font-size: 1.15rem;
   font-weight: 700;
-  background: var(--primary-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.3px;
 }
@@ -152,13 +156,13 @@ const toggleMenu = () => {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   z-index: 2;
 }
 
 .mobile-actions {
   padding: 16px;
-  border-top: 1px solid var(--border-color-light);
+  border-top: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -170,13 +174,13 @@ const toggleMenu = () => {
   flex: 1;
   overflow: auto;
   background: transparent;
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
   width: 100%;
 }
 
 .content-wrapper {
-  padding: 16px;
+  padding: 20px;
   min-height: calc(100vh - 111px);
 }
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { keysApi } from "@/api/keys";
 import type { APIKey, Group, KeyStatus } from "@/types/models";
-import { appState, triggerSyncOperationRefresh } from "@/utils/app-state";
+import { useTaskStore } from "@/stores/task";
 import { copy } from "@/utils/clipboard";
 import { getGroupDisplayName, maskKey } from "@/utils/display";
 import {
@@ -25,6 +25,7 @@ import {
   NSelect,
   NSpace,
   NSpin,
+  NTag,
   useDialog,
   type MessageReactive,
 } from "naive-ui";
@@ -44,6 +45,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+const taskStore = useTaskStore();
 
 const keys = ref<KeyRow[]>([]);
 const loading = ref(false);
@@ -55,6 +57,21 @@ const total = ref(0);
 const totalPages = ref(0);
 const dialog = useDialog();
 const confirmInput = ref("");
+
+// 搜索防抖 - 与分组/子分组搜索一致的实时过滤体验
+let searchTimer: number | null = null;
+watch(searchText, () => {
+  if (searchTimer) {
+    clearTimeout(searchTimer);
+  }
+  searchTimer = window.setTimeout(() => {
+    if (currentPage.value !== 1) {
+      currentPage.value = 1;
+    } else {
+      loadKeys();
+    }
+  }, 300);
+});
 
 // 状态过滤选项
 const statusOptions = [
@@ -128,17 +145,17 @@ watch(statusFilter, async () => {
 
 // 监听任务完成事件，自动刷新密钥列表
 watch(
-  () => appState.groupDataRefreshTrigger,
+  () => taskStore.groupDataRefreshTrigger,
   () => {
     // 检查是否需要刷新当前分组的密钥列表
-    if (appState.lastCompletedTask && props.selectedGroup) {
+    if (taskStore.lastCompletedTask && props.selectedGroup) {
       // 通过分组名称匹配
-      const isCurrentGroup = appState.lastCompletedTask.groupName === props.selectedGroup.name;
+      const isCurrentGroup = taskStore.lastCompletedTask.groupName === props.selectedGroup.name;
 
       const shouldRefresh =
-        appState.lastCompletedTask.taskType === "KEY_VALIDATION" ||
-        appState.lastCompletedTask.taskType === "KEY_IMPORT" ||
-        appState.lastCompletedTask.taskType === "KEY_DELETE";
+        taskStore.lastCompletedTask.taskType === "KEY_VALIDATION" ||
+        taskStore.lastCompletedTask.taskType === "KEY_IMPORT" ||
+        taskStore.lastCompletedTask.taskType === "KEY_DELETE";
 
       if (isCurrentGroup && shouldRefresh) {
         // 刷新当前分组的密钥列表
@@ -217,7 +234,7 @@ async function handleBatchDeleteSuccess() {
   await loadKeys();
   // 触发同步操作刷新
   if (props.selectedGroup) {
-    triggerSyncOperationRefresh(props.selectedGroup.name, "BATCH_DELETE");
+    taskStore.triggerSyncOperationRefresh(props.selectedGroup.name, "BATCH_DELETE");
   }
 }
 
@@ -255,7 +272,7 @@ async function testKey(_key: KeyRow) {
     }
     await loadKeys();
     // 触发同步操作刷新
-    triggerSyncOperationRefresh(props.selectedGroup.name, "TEST_SINGLE");
+    taskStore.triggerSyncOperationRefresh(props.selectedGroup.name, "TEST_SINGLE");
   } catch (_error) {
     console.error("Test failed");
   } finally {
@@ -345,7 +362,7 @@ async function restoreKey(key: KeyRow) {
         await keysApi.restoreKeys(props.selectedGroup.id, key.key_value);
         await loadKeys();
         // 触发同步操作刷新
-        triggerSyncOperationRefresh(props.selectedGroup.name, "RESTORE_SINGLE");
+        taskStore.triggerSyncOperationRefresh(props.selectedGroup.name, "RESTORE_SINGLE");
       } catch (_error) {
         console.error("Restore failed");
       } finally {
@@ -378,7 +395,7 @@ async function deleteKey(key: KeyRow) {
         await keysApi.deleteKeys(props.selectedGroup.id, key.key_value);
         await loadKeys();
         // 触发同步操作刷新
-        triggerSyncOperationRefresh(props.selectedGroup.name, "DELETE_SINGLE");
+        taskStore.triggerSyncOperationRefresh(props.selectedGroup.name, "DELETE_SINGLE");
       } catch (_error) {
         console.error("Delete failed");
       } finally {
@@ -471,7 +488,7 @@ async function restoreAllInvalid() {
         await keysApi.restoreAllInvalidKeys(props.selectedGroup.id);
         await loadKeys();
         // 触发同步操作刷新
-        triggerSyncOperationRefresh(props.selectedGroup.name, "RESTORE_ALL_INVALID");
+        taskStore.triggerSyncOperationRefresh(props.selectedGroup.name, "RESTORE_ALL_INVALID");
       } catch (_error) {
         console.error("Restore failed");
       } finally {
@@ -501,7 +518,7 @@ async function validateKeys(status: "all" | "active" | "invalid") {
   try {
     await keysApi.validateGroupKeys(props.selectedGroup.id, status === "all" ? undefined : status);
     localStorage.removeItem("last_closed_task");
-    appState.taskPollingTrigger++;
+    taskStore.triggerTaskPolling();
   } catch (_error) {
     console.error("Test failed");
   } finally {
@@ -532,7 +549,7 @@ async function clearAllInvalid() {
         window.$message.success(data?.message || t("keys.clearSuccess"));
         await loadKeys();
         // 触发同步操作刷新
-        triggerSyncOperationRefresh(props.selectedGroup.name, "CLEAR_ALL_INVALID");
+        taskStore.triggerSyncOperationRefresh(props.selectedGroup.name, "CLEAR_ALL_INVALID");
       } catch (_error) {
         console.error("Delete failed");
       } finally {
@@ -592,7 +609,7 @@ async function clearAll() {
             window.$message.success(t("keys.clearAllKeysSuccess"));
             await loadKeys();
             // Trigger sync operation refresh
-            triggerSyncOperationRefresh(props.selectedGroup.name, "CLEAR_ALL");
+            taskStore.triggerSyncOperationRefresh(props.selectedGroup.name, "CLEAR_ALL");
           } catch (_error) {
             console.error("Clear all failed", _error);
           } finally {
@@ -1019,7 +1036,7 @@ function resetPage() {
 .page-size-select:focus {
   outline: none;
   border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 /* 密钥卡片网格 */
@@ -1038,25 +1055,23 @@ function resetPage() {
 .key-card {
   background: var(--card-bg-solid);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--border-radius-md);
   padding: 14px;
-  transition: all 0.2s;
+  transition: var(--transition-base);
   display: flex;
   flex-direction: column;
   gap: 10px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .key-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+  border-color: var(--border-color-strong);
+  box-shadow: var(--shadow-sm);
 }
 
 /* 状态相关样式 */
 .key-card.status-valid {
   border-color: var(--success-border);
   background: var(--success-bg);
-  border-width: 1.5px;
 }
 
 .key-card.status-invalid {

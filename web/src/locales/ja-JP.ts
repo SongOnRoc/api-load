@@ -108,6 +108,7 @@ export default {
   },
   keys: {
     title: "キー管理",
+    subtitle: "APIグループ・キー・上流チャネルを管理",
     groupManagement: "グループ管理",
     keyManagement: "キー管理",
     createGroup: "グループ作成",
@@ -439,6 +440,8 @@ export default {
     addSubGroup: "サブグループを追加",
     createSubGroup: "サブグループを作成",
     subGroup: "サブグループ",
+    manuallyDisabledHint: "スイッチで手動無効化中。右下のスイッチをオンにしてください。",
+    weightZeroHint: "重みが 0 です。「編集」をクリックして重みを調整してください。",
     totalSubGroups: "合計 {total} サブグループ",
     sortedByWeight: "重み降順でソート",
     noSubGroups: "サブグループがありません",
@@ -471,6 +474,7 @@ export default {
   },
   logs: {
     title: "ログ",
+    subtitle: "リクエストログとシステムイベントを表示",
     requestLogs: "リクエストログ",
     systemLogs: "システムログ",
     errorLogs: "エラーログ",
@@ -532,6 +536,7 @@ export default {
   },
   settings: {
     title: "システム設定",
+    subtitle: "システム・セキュリティ・パフォーマンスを設定",
     general: "基本設定",
     security: "セキュリティ設定",
     performance: "パフォーマンス設定",

@@ -1,7 +1,7 @@
 import i18n from "@/locales";
-import { useAuthService } from "@/services/auth";
+import { useAuthStore } from "@/stores/auth";
+import { useLoadingStore } from "@/stores/loading";
 import axios from "axios";
-import { appState } from "./app-state";
 
 // 定义不需要显示 loading 的 API 地址列表
 const noLoadingUrls = ["/tasks/status"];
@@ -22,7 +22,7 @@ const http = axios.create({
 http.interceptors.request.use(config => {
   // 检查当前请求的 URL 是否在屏蔽列表中
   if (config.url && !noLoadingUrls.includes(config.url)) {
-    appState.loading = true;
+    useLoadingStore().start();
   }
   const authKey = localStorage.getItem("authKey");
   if (authKey) {
@@ -37,19 +37,18 @@ http.interceptors.request.use(config => {
 // 响应拦截器
 http.interceptors.response.use(
   response => {
-    appState.loading = false;
+    useLoadingStore().finish();
     if (response.config.method !== "get" && !response.config.hideMessage) {
       window.$message.success(response.data.message ?? i18n.global.t("common.operationSuccess"));
     }
     return response.data;
   },
   error => {
-    appState.loading = false;
+    useLoadingStore().finish();
     if (error.response) {
       if (error.response.status === 401) {
         if (window.location.pathname !== "/login") {
-          const { logout } = useAuthService();
-          logout();
+          useAuthStore().clear();
           window.location.href = "/login";
         }
       }
