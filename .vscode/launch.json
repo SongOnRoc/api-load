@@ -1,0 +1,23 @@
+{
+  // VS Code 启动配置 — GPT-Load 后端调试
+  //
+  // 使用前请先复制 .env.example 为 .env 并填写 AUTH_KEY:
+  //   cp .env.example .env
+  //
+  // 启动方式:
+  //   1. Debug Backend (Go) — 调试启动后端，监听 :3001
+  //
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // 调试后端 Go 服务 (端口 3001)
+      "name": "Debug Backend (Go)",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/main.go",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
+}
