@@ -2,10 +2,11 @@ FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
 
 ARG VERSION=1.0.0
 WORKDIR /build
-COPY ./web/package*.json ./
-RUN npm ci
+RUN npm install -g pnpm
+COPY ./web/package.json ./web/pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 COPY ./web .
-RUN VITE_VERSION=${VERSION} npm run build
+RUN VITE_VERSION=${VERSION} pnpm run build
 
 
 FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS builder2

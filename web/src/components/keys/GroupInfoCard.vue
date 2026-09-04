@@ -15,14 +15,13 @@ import {
   NButton,
   NButtonGroup,
   NCard,
-  NCollapse,
-  NCollapseItem,
-  NForm,
-  NFormItem,
+  NDescriptions,
+  NDescriptionsItem,
   NGrid,
   NGridItem,
   NIcon,
   NInput,
+  NModal,
   NSpin,
   NTag,
   NTooltip,
@@ -31,6 +30,7 @@ import {
 import { computed, h, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import AggregateGroupModal from "./AggregateGroupModal.vue";
+import CopyAggregateGroupModal from "./CopyAggregateGroupModal.vue";
 import GroupCopyModal from "./GroupCopyModal.vue";
 import GroupFormModal from "./GroupFormModal.vue";
 
@@ -59,10 +59,11 @@ const loading = ref(false);
 const dialog = useDialog();
 const showEditModal = ref(false);
 const showCopyModal = ref(false);
+const showCopyAggregateModal = ref(false);
 const showAggregateEditModal = ref(false);
 const delLoading = ref(false);
 const confirmInput = ref("");
-const expandedName = ref<string[]>([]);
+const showDetailModal = ref(false);
 const configOptions = ref<GroupConfigOption[]>([]);
 const showProxyKeys = ref(false);
 const parentAggregateGroups = ref<ParentAggregateGroup[]>([]);
@@ -88,6 +89,17 @@ const hasAdvancedConfig = computed(() => {
 // 判断是否为聚合分组
 const isAggregateGroup = computed(() => {
   return props.group?.group_type === "aggregate";
+});
+
+// 渠道类型对应的标签颜色
+const channelTagType = computed<"default" | "success" | "info" | "warning" | "error">(() => {
+  const map: Record<string, "default" | "success" | "info" | "warning" | "error"> = {
+    openai: "success",
+    "openai-response": "success",
+    gemini: "info",
+    anthropic: "warning",
+  };
+  return map[props.group?.channel_type ?? ""] ?? "default";
 });
 
 // 计算有效子分组数（weight > 0 且有可用密钥）
@@ -222,7 +234,11 @@ function handleEdit() {
 }
 
 function handleCopy() {
-  showCopyModal.value = true;
+  if (isAggregateGroup.value) {
+    showCopyAggregateModal.value = true;
+  } else {
+    showCopyModal.value = true;
+  }
 }
 
 function handleNavigateToGroup(groupId: number) {
@@ -245,6 +261,13 @@ function handleAggregateGroupEdited(newGroup: Group) {
 
 function handleGroupCopied(newGroup: Group) {
   showCopyModal.value = false;
+  if (newGroup) {
+    emit("copy-success", newGroup);
+  }
+}
+
+function handleAggregateGroupCopied(newGroup: Group) {
+  showCopyAggregateModal.value = false;
   if (newGroup) {
     emit("copy-success", newGroup);
   }
@@ -347,7 +370,7 @@ async function copyUrl(url: string) {
 function resetPage() {
   showEditModal.value = false;
   showCopyModal.value = false;
-  expandedName.value = [];
+  showDetailModal.value = false;
 }
 </script>
 
@@ -371,12 +394,11 @@ function resetPage() {
           </div>
           <div class="header-actions">
             <n-button
-              v-if="group?.group_type !== 'aggregate'"
               quaternary
               circle
               size="small"
               @click="handleCopy"
-              :title="t('keys.copyGroup')"
+              :title="isAggregateGroup ? t('subGroups.copyAggregateGroup') : t('keys.copyGroup')"
               :disabled="!group"
             >
               <template #icon>
@@ -548,242 +570,235 @@ function resetPage() {
       </div>
       <n-divider style="margin: 0" />
 
-      <!-- 详细信息区（可折叠） -->
+      <!-- 详细信息按钮（点击打开对话框） -->
       <div class="details-section">
-        <n-collapse accordion v-model:expanded-names="expandedName">
-          <n-collapse-item :title="t('keys.detailInfo')" name="details">
-            <div class="details-content">
-              <div class="detail-section">
-                <h4 class="section-title">{{ t("keys.basicInfo") }}</h4>
-                <n-form label-placement="left" label-width="140px" label-align="right">
-                  <n-grid cols="1 m:2">
-                    <n-grid-item>
-                      <n-form-item :label="`${t('keys.groupName')}：`">
-                        {{ group?.name }}
-                      </n-form-item>
-                    </n-grid-item>
-                    <n-grid-item>
-                      <n-form-item :label="`${t('keys.displayName')}：`">
-                        {{ group?.display_name }}
-                      </n-form-item>
-                    </n-grid-item>
-                    <n-grid-item>
-                      <n-form-item :label="`${t('keys.channelType')}：`">
-                        {{ group?.channel_type }}
-                      </n-form-item>
-                    </n-grid-item>
-                    <n-grid-item>
-                      <n-form-item :label="`${t('keys.sortOrder')}：`">
-                        {{ group?.sort }}
-                      </n-form-item>
-                    </n-grid-item>
-                    <!-- 标准分组才显示测试模型和测试路径 -->
-                    <n-grid-item v-if="!isAggregateGroup">
-                      <n-form-item :label="`${t('keys.testModel')}：`">
-                        {{ group?.test_model }}
-                      </n-form-item>
-                    </n-grid-item>
-                    <n-grid-item v-if="!isAggregateGroup && group?.channel_type !== 'gemini'">
-                      <n-form-item :label="`${t('keys.testPath')}：`">
-                        {{ group?.validation_endpoint }}
-                      </n-form-item>
-                    </n-grid-item>
-                    <n-grid-item :span="2">
-                      <n-form-item :label="`${t('keys.proxyKeys')}：`">
-                        <div class="proxy-keys-content">
-                          <span class="key-text">{{ proxyKeysDisplay }}</span>
-                          <n-button-group size="small" class="key-actions" v-if="group?.proxy_keys">
-                            <n-tooltip trigger="hover">
-                              <template #trigger>
-                                <n-button quaternary circle @click="showProxyKeys = !showProxyKeys">
-                                  <template #icon>
-                                    <n-icon
-                                      :component="showProxyKeys ? EyeOffOutline : EyeOutline"
-                                    />
-                                  </template>
-                                </n-button>
-                              </template>
-                              {{ showProxyKeys ? t("keys.hideKeys") : t("keys.showKeys") }}
-                            </n-tooltip>
-                            <n-tooltip trigger="hover">
-                              <template #trigger>
-                                <n-button quaternary circle @click="copyProxyKeys">
-                                  <template #icon>
-                                    <n-icon :component="CopyOutline" />
-                                  </template>
-                                </n-button>
-                              </template>
-                              {{ t("keys.copyKeys") }}
-                            </n-tooltip>
-                          </n-button-group>
-                        </div>
-                      </n-form-item>
-                    </n-grid-item>
-                    <n-grid-item :span="2">
-                      <n-form-item :label="`${t('common.description')}：`">
-                        <div class="description-content">
-                          {{ group?.description || "-" }}
-                        </div>
-                      </n-form-item>
-                    </n-grid-item>
-                  </n-grid>
-                </n-form>
-              </div>
-
-              <!-- 聚合引用区（仅普通分组且存在被引用关系时显示） -->
-              <div
-                class="detail-section"
-                v-if="!isAggregateGroup && parentAggregateGroups.length > 0"
-              >
-                <h4 class="section-title">{{ t("keys.aggregateReferences") }}</h4>
-                <n-form label-placement="left" label-width="140px">
-                  <n-form-item
-                    v-for="(parent, index) in parentAggregateGroups"
-                    :key="parent.group_id"
-                    class="aggregate-ref-item"
-                    :label="`${t('keys.aggregateGroup')} ${index + 1}:`"
-                  >
-                    <span class="aggregate-weight">
-                      <n-tag size="small" type="info">
-                        {{ t("keys.weight") }}: {{ parent.weight }}
-                      </n-tag>
-                    </span>
-                    <n-input
-                      class="aggregate-name"
-                      :value="parent.display_name || parent.name"
-                      readonly
-                      size="small"
-                      style="margin-left: 5px; margin-right: 8px"
-                    />
-                    <n-button
-                      round
-                      tertiary
-                      type="default"
-                      size="tiny"
-                      @click="handleNavigateToGroup(parent.group_id)"
-                      :title="t('keys.viewGroupInfo')"
-                    >
-                      <template #icon>
-                        <n-icon :component="EyeOutline" />
-                      </template>
-                      {{ t("common.view") }}
-                    </n-button>
-                  </n-form-item>
-                </n-form>
-              </div>
-
-              <!-- 标准分组才显示上游地址 -->
-              <div class="detail-section" v-if="!isAggregateGroup">
-                <h4 class="section-title">{{ t("keys.upstreamAddresses") }}</h4>
-                <n-form label-placement="left" label-width="140px">
-                  <n-form-item
-                    v-for="(upstream, index) in group?.upstreams ?? []"
-                    :key="index"
-                    class="upstream-item"
-                    :label="`${t('keys.upstream')} ${index + 1}:`"
-                  >
-                    <span class="upstream-weight">
-                      <n-tag size="small" type="info">
-                        {{ t("keys.weight") }}: {{ upstream.weight }}
-                      </n-tag>
-                    </span>
-                    <n-input class="upstream-url" :value="upstream.url" readonly size="small" />
-                  </n-form-item>
-                </n-form>
-              </div>
-
-              <!-- 标准分组才显示高级配置 -->
-              <div class="detail-section" v-if="!isAggregateGroup && hasAdvancedConfig">
-                <h4 class="section-title">{{ t("keys.advancedConfig") }}</h4>
-                <n-form label-placement="left">
-                  <n-form-item v-for="(value, key) in group?.config || {}" :key="key">
-                    <template #label>
-                      <n-tooltip trigger="hover" :delay="300" placement="top">
-                        <template #trigger>
-                          <span class="config-label">
-                            {{ getConfigDisplayName(key) }}:
-                            <n-icon size="14" class="config-help-icon">
-                              <svg viewBox="0 0 24 24">
-                                <path
-                                  fill="currentColor"
-                                  d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,17A1.5,1.5 0 0,1 10.5,15.5A1.5,1.5 0 0,1 12,14A1.5,1.5 0 0,1 13.5,15.5A1.5,1.5 0 0,1 12,17M12,10.5C10.07,10.5 8.5,8.93 8.5,7A3.5,3.5 0 0,1 12,3.5A3.5,3.5 0 0,1 15.5,7C15.5,8.93 13.93,10.5 12,10.5Z"
-                                />
-                              </svg>
-                            </n-icon>
-                          </span>
-                        </template>
-                        <div class="config-tooltip">
-                          <div class="tooltip-title">{{ getConfigDisplayName(key) }}</div>
-                          <div class="tooltip-description">{{ getConfigDescription(key) }}</div>
-                          <div class="tooltip-key">{{ t("keys.configKey") }}: {{ key }}</div>
-                        </div>
-                      </n-tooltip>
-                    </template>
-                    {{ value || "-" }}
-                  </n-form-item>
-                  <n-form-item
-                    v-if="group?.header_rules && group.header_rules.length > 0"
-                    :label="`${t('keys.customHeaders')}：`"
-                    :span="2"
-                  >
-                    <div class="header-rules-display">
-                      <div
-                        v-for="(rule, index) in group.header_rules"
-                        :key="index"
-                        class="header-rule-item"
-                      >
-                        <n-tag :type="rule.action === 'remove' ? 'error' : 'default'" size="small">
-                          {{ rule.key }}
-                        </n-tag>
-                        <span class="header-separator">:</span>
-                        <span class="header-value" v-if="rule.action === 'set'">
-                          {{ rule.value || t("keys.emptyValue") }}
-                        </span>
-                        <span class="header-removed" v-else>{{ t("common.delete") }}</span>
-                      </div>
-                    </div>
-                  </n-form-item>
-                  <n-form-item
-                    v-if="group?.model_redirect_rules"
-                    :label="`${t('keys.modelRedirectPolicy')}：`"
-                    :span="2"
-                  >
-                    <n-tag
-                      :type="group?.model_redirect_strict ? 'warning' : 'success'"
-                      size="small"
-                    >
-                      {{
-                        group?.model_redirect_strict
-                          ? t("keys.modelRedirectStrictMode")
-                          : t("keys.modelRedirectLooseMode")
-                      }}
-                    </n-tag>
-                  </n-form-item>
-                  <n-form-item
-                    v-if="group?.model_redirect_rules"
-                    :label="`${t('keys.modelRedirectRules')}：`"
-                    :span="2"
-                  >
-                    <pre class="config-json">{{
-                      JSON.stringify(group?.model_redirect_rules || {}, null, 2)
-                    }}</pre>
-                  </n-form-item>
-                  <n-form-item
-                    v-if="group?.param_overrides"
-                    :label="`${t('keys.paramOverrides')}：`"
-                    :span="2"
-                  >
-                    <pre class="config-json">{{
-                      JSON.stringify(group?.param_overrides || "", null, 2)
-                    }}</pre>
-                  </n-form-item>
-                </n-form>
-              </div>
-            </div>
-          </n-collapse-item>
-        </n-collapse>
+        <n-button block secondary size="small" :disabled="!group" @click="showDetailModal = true">
+          <template #icon>
+            <n-icon :component="EyeOutline" />
+          </template>
+          {{ t("keys.detailInfo") }}
+        </n-button>
       </div>
     </n-card>
+
+    <!-- 详细信息对话框 -->
+    <n-modal
+      v-model:show="showDetailModal"
+      preset="card"
+      :title="t('keys.detailInfo')"
+      :style="{ width: '760px', maxWidth: '92vw' }"
+      :bordered="false"
+      size="huge"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div class="details-content">
+        <!-- 基础信息 -->
+        <div class="detail-section">
+          <h4 class="section-title">{{ t("keys.basicInfo") }}</h4>
+          <n-descriptions
+            label-placement="left"
+            bordered
+            :column="2"
+            size="small"
+            label-align="right"
+          >
+            <n-descriptions-item :label="t('keys.groupName')">
+              {{ group?.name || "-" }}
+            </n-descriptions-item>
+            <n-descriptions-item :label="t('keys.displayName')">
+              {{ group?.display_name || "-" }}
+            </n-descriptions-item>
+            <n-descriptions-item :label="t('keys.channelType')">
+              <n-tag size="small" :type="channelTagType">{{ group?.channel_type }}</n-tag>
+            </n-descriptions-item>
+            <n-descriptions-item :label="t('keys.sortOrder')">
+              {{ group?.sort ?? 0 }}
+            </n-descriptions-item>
+            <n-descriptions-item v-if="!isAggregateGroup" :label="t('keys.testModel')">
+              {{ group?.test_model || "-" }}
+            </n-descriptions-item>
+            <n-descriptions-item
+              v-if="!isAggregateGroup && group?.channel_type !== 'gemini'"
+              :label="t('keys.testPath')"
+            >
+              <span class="mono-text">{{ group?.validation_endpoint || "-" }}</span>
+            </n-descriptions-item>
+            <n-descriptions-item :label="t('keys.proxyKeys')" :span="2">
+              <div class="proxy-keys-content">
+                <span class="key-text">{{ proxyKeysDisplay }}</span>
+                <n-button-group size="small" class="key-actions" v-if="group?.proxy_keys">
+                  <n-tooltip trigger="hover">
+                    <template #trigger>
+                      <n-button quaternary circle @click="showProxyKeys = !showProxyKeys">
+                        <template #icon>
+                          <n-icon :component="showProxyKeys ? EyeOffOutline : EyeOutline" />
+                        </template>
+                      </n-button>
+                    </template>
+                    {{ showProxyKeys ? t("keys.hideKeys") : t("keys.showKeys") }}
+                  </n-tooltip>
+                  <n-tooltip trigger="hover">
+                    <template #trigger>
+                      <n-button quaternary circle @click="copyProxyKeys">
+                        <template #icon>
+                          <n-icon :component="CopyOutline" />
+                        </template>
+                      </n-button>
+                    </template>
+                    {{ t("keys.copyKeys") }}
+                  </n-tooltip>
+                </n-button-group>
+              </div>
+            </n-descriptions-item>
+            <n-descriptions-item :label="t('common.description')" :span="2">
+              <span class="description-text">{{ group?.description || "-" }}</span>
+            </n-descriptions-item>
+          </n-descriptions>
+        </div>
+
+        <!-- 聚合引用区（仅普通分组且存在被引用关系时显示） -->
+        <div class="detail-section" v-if="!isAggregateGroup && parentAggregateGroups.length > 0">
+          <h4 class="section-title">{{ t("keys.aggregateReferences") }}</h4>
+          <div class="ref-list">
+            <div
+              v-for="(parent, index) in parentAggregateGroups"
+              :key="parent.group_id"
+              class="ref-item"
+            >
+              <span class="item-index">#{{ index + 1 }}</span>
+              <n-tag size="small" type="info" class="item-weight">
+                {{ t("keys.weight") }}: {{ parent.weight }}
+              </n-tag>
+              <span class="ref-name">{{ parent.display_name || parent.name }}</span>
+              <n-button
+                tertiary
+                type="primary"
+                size="small"
+                @click="handleNavigateToGroup(parent.group_id)"
+                :title="t('keys.viewGroupInfo')"
+              >
+                <template #icon>
+                  <n-icon :component="EyeOutline" />
+                </template>
+                {{ t("common.view") }}
+              </n-button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 标准分组才显示上游地址 -->
+        <div class="detail-section" v-if="!isAggregateGroup">
+          <h4 class="section-title">{{ t("keys.upstreamAddresses") }}</h4>
+          <div class="upstream-list">
+            <div
+              v-for="(upstream, index) in group?.upstreams ?? []"
+              :key="index"
+              class="upstream-item"
+            >
+              <span class="item-index">#{{ index + 1 }}</span>
+              <n-tag size="small" type="info" class="item-weight">
+                {{ t("keys.weight") }}: {{ upstream.weight }}
+              </n-tag>
+              <span class="upstream-url mono-text">{{ upstream.url }}</span>
+            </div>
+            <div v-if="!group?.upstreams?.length" class="empty-hint">-</div>
+          </div>
+        </div>
+
+        <!-- 标准分组才显示高级配置 -->
+        <div class="detail-section" v-if="!isAggregateGroup && hasAdvancedConfig">
+          <h4 class="section-title">{{ t("keys.advancedConfig") }}</h4>
+
+          <!-- 通用配置项 -->
+          <n-descriptions
+            v-if="Object.keys(group?.config || {}).length > 0"
+            label-placement="left"
+            bordered
+            :column="1"
+            size="small"
+            label-align="right"
+          >
+            <n-descriptions-item v-for="(value, key) in group?.config || {}" :key="key">
+              <template #label>
+                <n-tooltip trigger="hover" :delay="300" placement="top">
+                  <template #trigger>
+                    <span class="config-label">
+                      {{ getConfigDisplayName(key) }}
+                      <n-icon size="13" class="config-help-icon">
+                        <svg viewBox="0 0 24 24">
+                          <path
+                            fill="currentColor"
+                            d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,17A1.5,1.5 0 0,1 10.5,15.5A1.5,1.5 0 0,1 12,14A1.5,1.5 0 0,1 13.5,15.5A1.5,1.5 0 0,1 12,17M12,10.5C10.07,10.5 8.5,8.93 8.5,7A3.5,3.5 0 0,1 12,3.5A3.5,3.5 0 0,1 15.5,7C15.5,8.93 13.93,10.5 12,10.5Z"
+                          />
+                        </svg>
+                      </n-icon>
+                    </span>
+                  </template>
+                  <div class="config-tooltip">
+                    <div class="tooltip-title">{{ getConfigDisplayName(key) }}</div>
+                    <div class="tooltip-description">{{ getConfigDescription(key) }}</div>
+                    <div class="tooltip-key">{{ t("keys.configKey") }}: {{ key }}</div>
+                  </div>
+                </n-tooltip>
+              </template>
+              <span class="config-value">{{ value || "-" }}</span>
+            </n-descriptions-item>
+          </n-descriptions>
+
+          <!-- 自定义 Header -->
+          <div class="sub-section" v-if="group?.header_rules && group.header_rules.length > 0">
+            <div class="sub-section-title">{{ t("keys.customHeaders") }}</div>
+            <div class="header-rules-display">
+              <div
+                v-for="(rule, index) in group.header_rules"
+                :key="index"
+                class="header-rule-item"
+              >
+                <n-tag :type="rule.action === 'remove' ? 'error' : 'default'" size="small">
+                  {{ rule.key }}
+                </n-tag>
+                <span class="header-separator">=</span>
+                <span class="header-value" v-if="rule.action === 'set'">
+                  {{ rule.value || t("keys.emptyValue") }}
+                </span>
+                <n-tag v-else size="small" type="error" :bordered="false">
+                  {{ t("common.delete") }}
+                </n-tag>
+              </div>
+            </div>
+          </div>
+
+          <!-- 模型重定向 -->
+          <div class="sub-section" v-if="group?.model_redirect_rules">
+            <div class="sub-section-title">{{ t("keys.modelRedirectPolicy") }}</div>
+            <div class="sub-section-row">
+              <n-tag :type="group?.model_redirect_strict ? 'warning' : 'success'" size="small">
+                {{
+                  group?.model_redirect_strict
+                    ? t("keys.modelRedirectStrictMode")
+                    : t("keys.modelRedirectLooseMode")
+                }}
+              </n-tag>
+            </div>
+            <div class="sub-section-title sub-section-title-sm">
+              {{ t("keys.modelRedirectRules") }}
+            </div>
+            <pre class="config-json">{{
+              JSON.stringify(group?.model_redirect_rules || {}, null, 2)
+            }}</pre>
+          </div>
+
+          <!-- 参数覆盖 -->
+          <div class="sub-section" v-if="group?.param_overrides">
+            <div class="sub-section-title">{{ t("keys.paramOverrides") }}</div>
+            <pre class="config-json">{{
+              JSON.stringify(group?.param_overrides || "", null, 2)
+            }}</pre>
+          </div>
+        </div>
+      </div>
+    </n-modal>
 
     <group-form-modal v-model:show="showEditModal" :group="group" @success="handleGroupEdited" />
     <aggregate-group-modal
@@ -796,6 +811,11 @@ function resetPage() {
       v-model:show="showCopyModal"
       :source-group="group"
       @success="handleGroupCopied"
+    />
+    <copy-aggregate-group-modal
+      v-model:show="showCopyAggregateModal"
+      :group="group"
+      @success="handleAggregateGroupCopied"
     />
   </div>
 </template>
@@ -886,11 +906,13 @@ function resetPage() {
 }
 
 .details-content {
-  margin-top: 12px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 6px;
 }
 
 .detail-section {
-  margin-bottom: 24px;
+  margin-bottom: 22px;
 }
 
 .detail-section:last-child {
@@ -898,33 +920,155 @@ function resetPage() {
 }
 
 .section-title {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin: 0 0 12px 0;
-  padding-bottom: 8px;
-  border-bottom: 2px solid var(--border-color);
+  margin: 0 0 10px 0;
+  padding-left: 8px;
+  border-left: 3px solid var(--primary-color);
+  line-height: 1.4;
+}
+
+/* 通用等宽文本（URL、路径等） */
+.mono-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  word-break: break-all;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+/* 基础信息 descriptions 微调 */
+.details-content :deep(.n-descriptions-item-label) {
+  font-weight: 500;
+  color: var(--text-secondary);
+  width: 120px;
+  white-space: nowrap;
+}
+
+.details-content :deep(.n-descriptions-item-content) {
+  color: var(--text-primary);
+  vertical-align: top;
+}
+
+/* 描述文本 */
+.description-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+/* 聚合引用列表 */
+.ref-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ref-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--border-color-light);
+}
+
+.item-index {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  min-width: 24px;
+}
+
+.item-weight {
+  flex-shrink: 0;
+}
+
+.ref-name {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+/* 上游地址列表 */
+.upstream-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.upstream-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--border-color-light);
 }
 
 .upstream-url {
-  font-family: monospace;
-  font-size: 0.9rem;
+  flex: 1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  word-break: break-all;
+  line-height: 1.5;
   color: var(--text-primary);
-  margin-left: 5px;
 }
 
-.upstream-weight {
-  min-width: 70px;
+.empty-hint {
+  color: var(--text-tertiary);
+  text-align: center;
+  padding: 12px;
+  font-size: 0.85rem;
+}
+
+/* 高级配置子区块 */
+.sub-section {
+  margin-top: 14px;
+}
+
+.sub-section-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.sub-section-title-sm {
+  margin-top: 12px;
+}
+
+.sub-section-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.config-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  word-break: break-all;
+  color: var(--text-primary);
 }
 
 .config-json {
   background: var(--bg-secondary);
+  border: 1px solid var(--border-color-light);
   border-radius: var(--border-radius-sm);
-  padding: 12px;
+  padding: 10px 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.8rem;
   color: var(--text-primary);
-  margin: 8px 0;
+  margin: 6px 0 0 0;
   overflow-x: auto;
+  white-space: pre;
+  line-height: 1.5;
 }
 
 @keyframes fadeInUp {
@@ -943,25 +1087,6 @@ function resetPage() {
 }
 
 /* 描述内容样式 */
-.description-content {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  line-height: 1.5;
-  min-height: 20px;
-  color: var(--text-primary);
-}
-
-.aggregate-weight {
-  min-width: 70px;
-}
-
-.aggregate-name {
-  font-family: monospace;
-  font-size: 0.9rem;
-  color: var(--text-primary);
-  width: 200px;
-}
-
 .proxy-keys-content {
   display: flex;
   align-items: flex-start;
@@ -972,12 +1097,13 @@ function resetPage() {
 
 .key-text {
   flex-grow: 1;
-  font-family: monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   white-space: pre-wrap;
   word-break: break-all;
   line-height: 1.5;
-  padding-top: 4px; /* Align with buttons */
+  padding-top: 2px;
   color: var(--text-primary);
+  font-size: 0.85rem;
 }
 
 .key-actions {
@@ -1036,15 +1162,17 @@ function resetPage() {
   flex-direction: column;
   gap: 6px;
   background: var(--bg-secondary);
+  border: 1px solid var(--border-color-light);
   border-radius: var(--border-radius-sm);
-  padding: 8px;
+  padding: 8px 10px;
 }
 
 .header-rule-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.875rem;
+  gap: 8px;
+  font-size: 0.85rem;
+  flex-wrap: wrap;
 }
 
 .header-separator {
@@ -1054,11 +1182,9 @@ function resetPage() {
 
 .header-value {
   color: var(--text-primary);
-  font-family: monospace;
-  background: var(--bg-secondary);
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-size: 0.8rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  word-break: break-all;
 }
 
 .header-removed {
