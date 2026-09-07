@@ -2,7 +2,7 @@ FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
 
 ARG VERSION=1.0.0
 WORKDIR /build
-RUN npm install -g pnpm
+RUN npm install -g pnpm@10
 COPY ./web/package.json ./web/pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY ./web .
