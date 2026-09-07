@@ -42,6 +42,7 @@ export const keysApi = {
   clearAllInvalidKeys: keyApi.clearAllInvalidKeys,
   clearAllKeys: keyApi.clearAllKeys,
   exportKeys: keyApi.exportKeys,
+  fetchKeysText: keyApi.fetchKeysText,
   validateGroupKeys: keyApi.validateGroupKeys,
 
   // 子分组

@@ -153,6 +153,28 @@ export const keyApi = {
     downloadViaAnchor(url, `keys-group_${groupId}-${status}-${Date.now()}.txt`);
   },
 
+  /**
+   * 批量获取密钥文本内容，用于复制到剪贴板。
+   * 复用后端的导出接口，仅取文本而不触发文件下载。
+   */
+  async fetchKeysText(
+    groupId: number,
+    status: "all" | "active" | "invalid" = "all"
+  ): Promise<string> {
+    const params: Record<string, string> = {
+      group_id: groupId.toString(),
+    };
+    if (status !== "all") {
+      params.status = status;
+    }
+    const url = buildAuthQuery(params, `${http.defaults.baseURL}/keys/export`);
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`导出失败: ${res.status}`);
+    }
+    return res.text();
+  },
+
   async validateGroupKeys(
     groupId: number,
     status?: "active" | "invalid"

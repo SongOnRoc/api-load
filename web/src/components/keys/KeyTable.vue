@@ -8,20 +8,24 @@ import {
   AddCircleOutline,
   AlertCircleOutline,
   CheckmarkCircle,
+  CloudDownloadOutline,
   CopyOutline,
+  EllipsisHorizontalOutline,
   EyeOffOutline,
   EyeOutline,
   Pencil,
   RemoveCircleOutline,
   Search,
+  ShieldCheckmarkOutline,
+  WarningOutline,
 } from "@vicons/ionicons5";
 import {
   NButton,
-  NDropdown,
   NEmpty,
   NIcon,
   NInput,
   NModal,
+  NPopover,
   NSelect,
   NSpace,
   NSpin,
@@ -57,6 +61,13 @@ const total = ref(0);
 const totalPages = ref(0);
 const dialog = useDialog();
 const confirmInput = ref("");
+const showBatchPanel = ref(false);
+
+/** 执行批量操作并关闭面板，避免操作后浮层滞留 */
+async function runBatch(action: () => void | Promise<void>) {
+  showBatchPanel.value = false;
+  await action();
+}
 
 // 搜索防抖 - 与分组/子分组搜索一致的实时过滤体验
 let searchTimer: number | null = null;
@@ -78,29 +89,6 @@ const statusOptions = [
   { label: t("common.all"), value: "all" },
   { label: t("keys.valid"), value: "active" },
   { label: t("keys.invalid"), value: "invalid" },
-];
-
-// 更多操作下拉菜单选项
-const moreOptions = [
-  { label: t("keys.exportAllKeys"), key: "copyAll" },
-  { label: t("keys.exportValidKeys"), key: "copyValid" },
-  { label: t("keys.exportInvalidKeys"), key: "copyInvalid" },
-  { type: "divider" },
-  { label: t("keys.restoreAllInvalidKeys"), key: "restoreAll" },
-  {
-    label: t("keys.clearAllInvalidKeys"),
-    key: "clearInvalid",
-    props: { style: { color: "#d03050" } },
-  },
-  {
-    label: t("keys.clearAllKeys"),
-    key: "clearAll",
-    props: { style: { color: "red", fontWeight: "bold" } },
-  },
-  { type: "divider" },
-  { label: t("keys.validateAllKeys"), key: "validateAll" },
-  { label: t("keys.validateValidKeys"), key: "validateActive" },
-  { label: t("keys.validateInvalidKeys"), key: "validateInvalid" },
 ];
 
 let testingMsg: MessageReactive | null = null;
@@ -171,39 +159,6 @@ function handleSearchInput() {
     currentPage.value = 1;
   } else {
     loadKeys();
-  }
-}
-
-// 处理更多操作菜单
-function handleMoreAction(key: string) {
-  switch (key) {
-    case "copyAll":
-      copyAllKeys();
-      break;
-    case "copyValid":
-      copyValidKeys();
-      break;
-    case "copyInvalid":
-      copyInvalidKeys();
-      break;
-    case "restoreAll":
-      restoreAllInvalid();
-      break;
-    case "validateAll":
-      validateKeys("all");
-      break;
-    case "validateActive":
-      validateKeys("active");
-      break;
-    case "validateInvalid":
-      validateKeys("invalid");
-      break;
-    case "clearInvalid":
-      clearAllInvalid();
-      break;
-    case "clearAll":
-      clearAll();
-      break;
   }
 }
 
@@ -443,27 +398,62 @@ function getStatusClass(status: KeyStatus): string {
   }
 }
 
-async function copyAllKeys() {
+/** 批量复制密钥到剪贴板：拉取导出的文本内容后写入剪贴板 */
+async function copyKeysToClipboard(status: "all" | "active" | "invalid") {
   if (!props.selectedGroup?.id) {
     return;
   }
 
-  keysApi.exportKeys(props.selectedGroup.id, "all");
+  try {
+    const text = await keysApi.fetchKeysText(props.selectedGroup.id, status);
+    const keysList = text
+      .split("\n")
+      .map(line => line.trim())
+      .filter(Boolean);
+
+    if (keysList.length === 0) {
+      window.$message.warning(t("keys.noKeysToCopy"));
+      return;
+    }
+
+    await copy(keysList.join("\n"));
+    window.$message.success(t("keys.keysCopiedToClipboard"));
+  } catch (_error) {
+    window.$message.error(t("keys.copyFailedManual"));
+  }
+}
+
+async function copyAllKeys() {
+  await copyKeysToClipboard("all");
 }
 
 async function copyValidKeys() {
-  if (!props.selectedGroup?.id) {
-    return;
-  }
-
-  keysApi.exportKeys(props.selectedGroup.id, "active");
+  await copyKeysToClipboard("active");
 }
 
 async function copyInvalidKeys() {
+  await copyKeysToClipboard("invalid");
+}
+
+/** 导出密钥为文件 */
+function exportAllKeys() {
   if (!props.selectedGroup?.id) {
     return;
   }
+  keysApi.exportKeys(props.selectedGroup.id, "all");
+}
 
+function exportValidKeys() {
+  if (!props.selectedGroup?.id) {
+    return;
+  }
+  keysApi.exportKeys(props.selectedGroup.id, "active");
+}
+
+function exportInvalidKeys() {
+  if (!props.selectedGroup?.id) {
+    return;
+  }
   keysApi.exportKeys(props.selectedGroup.id, "invalid");
 }
 
@@ -687,13 +677,109 @@ function resetPage() {
               {{ t("common.search") }}
             </n-button>
           </n-input-group>
-          <n-dropdown :options="moreOptions" trigger="click" @select="handleMoreAction">
-            <n-button size="small" tertiary>
-              <template #icon>
-                <span style="font-size: 16px; font-weight: bold">⋯</span>
-              </template>
-            </n-button>
-          </n-dropdown>
+
+          <!-- 批量操作入口 -->
+          <n-popover
+            v-model:show="showBatchPanel"
+            trigger="click"
+            placement="bottom-end"
+            :show-arrow="false"
+            raw
+            :disabled="!selectedGroup?.id"
+          >
+            <template #trigger>
+              <n-button size="small" tertiary :disabled="!selectedGroup?.id">
+                <template #icon>
+                  <n-icon :component="EllipsisHorizontalOutline" />
+                </template>
+                {{ t("keys.batchActions") }}
+              </n-button>
+            </template>
+
+            <div class="batch-panel">
+              <!-- 复制 -->
+              <div class="batch-group">
+                <div class="batch-group-header">
+                  <n-icon :component="CopyOutline" class="batch-group-icon" />
+                  <span class="batch-group-title">{{ t("keys.copy") }}</span>
+                </div>
+                <div class="batch-group-actions">
+                  <button class="batch-chip" @click="runBatch(copyAllKeys)">
+                    {{ t("keys.allKeys") }}
+                  </button>
+                  <button class="batch-chip" @click="runBatch(copyValidKeys)">
+                    {{ t("keys.validKeys") }}
+                  </button>
+                  <button class="batch-chip" @click="runBatch(copyInvalidKeys)">
+                    {{ t("keys.invalidKeys") }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- 导出 -->
+              <div class="batch-group">
+                <div class="batch-group-header">
+                  <n-icon :component="CloudDownloadOutline" class="batch-group-icon" />
+                  <span class="batch-group-title">{{ t("keys.export") }}</span>
+                  <span class="batch-group-hint">{{ t("keys.exportFileHint") }}</span>
+                </div>
+                <div class="batch-group-actions">
+                  <button class="batch-chip" @click="runBatch(exportAllKeys)">
+                    {{ t("keys.allKeys") }}
+                  </button>
+                  <button class="batch-chip" @click="runBatch(exportValidKeys)">
+                    {{ t("keys.validKeys") }}
+                  </button>
+                  <button class="batch-chip" @click="runBatch(exportInvalidKeys)">
+                    {{ t("keys.invalidKeys") }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- 校验 -->
+              <div class="batch-group">
+                <div class="batch-group-header">
+                  <n-icon :component="ShieldCheckmarkOutline" class="batch-group-icon" />
+                  <span class="batch-group-title">{{ t("keys.validate") }}</span>
+                </div>
+                <div class="batch-group-actions">
+                  <button class="batch-chip" @click="runBatch(() => validateKeys('all'))">
+                    {{ t("keys.allKeys") }}
+                  </button>
+                  <button class="batch-chip" @click="runBatch(() => validateKeys('active'))">
+                    {{ t("keys.validKeys") }}
+                  </button>
+                  <button class="batch-chip" @click="runBatch(() => validateKeys('invalid'))">
+                    {{ t("keys.invalidKeys") }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- 危险操作 -->
+              <div class="batch-group batch-group-danger">
+                <div class="batch-group-header">
+                  <n-icon
+                    :component="WarningOutline"
+                    class="batch-group-icon batch-group-icon-danger"
+                  />
+                  <span class="batch-group-title batch-group-title-danger">
+                    {{ t("keys.dangerousActions") }}
+                  </span>
+                </div>
+                <div class="batch-group-actions">
+                  <button class="batch-chip" @click="runBatch(restoreAllInvalid)">
+                    {{ t("keys.restoreInvalid") }}
+                  </button>
+                  <button class="batch-chip batch-chip-danger" @click="runBatch(clearAllInvalid)">
+                    {{ t("keys.clearInvalid") }}
+                  </button>
+                  <button class="batch-chip batch-chip-danger" @click="runBatch(clearAll)">
+                    {{ t("keys.clearAll") }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </n-popover>
         </n-space>
       </div>
     </div>
@@ -927,95 +1013,95 @@ function resetPage() {
   gap: 8px;
 }
 
-.more-actions {
-  position: relative;
-}
-
-.more-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
+/* 批量操作面板 */
+.batch-panel {
+  width: 260px;
+  padding: 8px;
   background: var(--card-bg-solid);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  box-shadow: var(--shadow-lg);
-  min-width: 180px;
-  z-index: 1000;
-  overflow: hidden;
+  border-radius: 10px;
 }
 
-.menu-item {
-  display: block;
-  width: 100%;
-  padding: 8px 12px;
-  border: none;
-  background: none;
-  text-align: left;
-  cursor: pointer;
+.batch-group {
+  padding: 6px 2px 8px;
+}
+
+.batch-group + .batch-group {
+  border-top: 1px solid var(--border-color-light);
+}
+
+.batch-group-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 7px;
+}
+
+.batch-group-icon {
   font-size: 14px;
-  color: #333;
-  transition: background-color 0.2s;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
 }
 
-.menu-item:hover {
-  background: #f8f9fa;
+.batch-group-icon-danger {
+  color: var(--error-color, #d03050);
 }
 
-.menu-item.danger {
-  color: #dc3545;
-}
-
-.menu-item.danger:hover {
-  background: #f8d7da;
-}
-
-.menu-divider {
-  height: 1px;
-  background: #e9ecef;
-  margin: 4px 0;
-}
-
-.btn {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
+.batch-group-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
   white-space: nowrap;
 }
 
-.btn-sm {
-  padding: 4px 8px;
+.batch-group-title-danger {
+  color: var(--error-color, #d03050);
+}
+
+.batch-group-hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-left: auto;
+}
+
+.batch-group-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.batch-group-danger {
+  background: rgba(208, 48, 80, 0.04);
+  border-radius: 0 0 8px 8px;
+}
+
+.batch-chip {
+  padding: 3px 10px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg-solid);
+  border-radius: 6px;
   font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.batch-chip:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background: color-mix(in srgb, var(--primary-color) 8%, transparent);
 }
 
-.btn-primary {
-  background: #007bff;
-  color: white;
+.batch-chip-danger {
+  color: var(--error-color, #d03050);
 }
 
-.btn-primary:hover:not(:disabled) {
-  background: #0056b3;
-}
-
-.btn-secondary {
-  background: #6c757d;
-  color: white;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: #545b62;
-}
-
-.more-icon {
-  font-size: 16px;
-  font-weight: bold;
+.batch-chip-danger:hover {
+  border-color: var(--error-color, #d03050);
+  color: var(--error-color, #d03050);
+  background: rgba(208, 48, 80, 0.08);
 }
 
 .filter-select,
